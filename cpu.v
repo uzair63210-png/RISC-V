@@ -14,7 +14,7 @@ assign pc_brch = (return) ? pc_out : pc_brch1;
 
 IF_stage (pc_brch,brch|return,rst,clk,pc,instruction);
 
-ID (instruction,pc,clk,rst,brch,pc_brch1,instruction1,sp_add,A,pc1,ard1,ars11,
+ID (instruction,pc,clk,rst,brch,pc_brch1,instruction1,sp_add,pc1,ard1,ars11,
 ars21,rs11,rs21, flags,wr,addr, update_r,A,B,data_out,con,wr_ex,su);
 
 ex_state (instruction1,instructions,clk,rst,sp_add,ard1,ars11,ars21,rs11,rs21,

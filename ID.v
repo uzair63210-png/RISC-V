@@ -1,6 +1,6 @@
 module ID (input wire [31:0] instruction, input wire [31:0] pc,input clk,rst,output reg brch, 
 output reg [31:0] pc_branch, output reg [31:0] instruction1,
-output wire [15:0]sp_add, input wire [15:0]sp_update,output reg [31:0] pc1,
+output wire [15:0]sp_add,output reg [31:0] pc1,
 output reg [4:0] ard,ars1,ars2,output reg [15:0] rs1,rs2, input wire [5:0]  flags,//alu
 input wr, input [4:0] addr, input [15:0] update_r, // for write back stage
 input wire [15:0] A,B, output wire [15:0] data_out,
@@ -53,7 +53,7 @@ if (wr_ex) begin
 registor[1] <= B;
 end 
 if (su) begin
- sp <= sp_update;
+ sp <= A;
 end 
 if (wr) begin
         if (addr != 5'b0) begin  // Prevent writing to r0 (A)
