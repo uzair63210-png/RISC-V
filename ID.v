@@ -79,8 +79,8 @@ case (instruction[31:30])
          end else if(instruction[1:0] == 2'b11 && instruction[29:26] == 4'b0100) begin //return
          con <= instruction[29:26];
          ard <= 5'b0;
-         ars1 <= 16'b0; // Source register 1
-         ars2 <= 16'b0; // Source register 2
+         ars1 <= 5'b0; // Source register 1
+         ars2 <= 5'b0; // Source register 2
          rs1<= sp;
          rs2 <= 16'h3;
          end 

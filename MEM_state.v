@@ -84,7 +84,7 @@ assign rd = &{instruction[31],~instruction[30],~instruction[27]};
 assign spwr = &{instruction[31],instruction[30],instruction[0]};
 assign sprd = &{~instruction[31],~instruction[30],~instruction[29],instruction[28],~instruction[27],~instruction[26],instruction[1],instruction[0]};
 
-memory(clk,rst,wr,rd,spwr,sprd,A,data_in,d1,sp,pc,flage,pc_out);
+memory(clk,rst,wr,rd,spwr,sprd,A,data_in,d1,sp,pc,flags,pc_out);
 
 MEM_Buffer (instruction,instructions,clk,rst,rd,sprd,
 ard,ars1,ars2,d1,A,ard_,ars1_,ars2_,out,return);

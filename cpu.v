@@ -2,6 +2,7 @@ module cpu (input clk,rst);
 
 wire [3:0] con;
 wire [31:0] instruction,instruction1,instructions,instructions2,pc,pc_brch,pc1,pc2;
+wire [31:0] pc_out,pc_brch1;
 wire brch,wr_ex,wr,su;
 wire [15:0]sp_add,sp_add_,out;
 wire return;
