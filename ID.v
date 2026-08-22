@@ -1,9 +1,10 @@
-module ID (input wire [31:0] instruction, input wire [31:0] pc,input clk,rst,output reg brch, output reg [31:0] pc_branch,
+module ID (input wire [31:0] instruction, input wire [31:0] pc,input clk,rst,output reg brch, 
+output reg [31:0] pc_branch, output reg [31:0] instruction1,
 output wire [15:0]sp_add, input wire [15:0]sp_update,output reg [31:0] pc1,
 output reg [4:0] ard,ars1,ars2,output reg [15:0] rs1,rs2, input wire [5:0]  flags,//alu
 input wr, input [4:0] addr, input [15:0] update_r, // for write back stage
 input wire [15:0] A,B, output wire [15:0] data_out,
-output reg [3:0] con);
+output reg [3:0] con, input wr_ex,su);
 
 reg [15:0] registor[31:0]; // all registors 
 reg [15:0] sp; // default 1A hex
@@ -11,6 +12,7 @@ assign sp_add = sp;
 assign data_out = registor[instruction[25:21]];
 
 always @(posedge clk or posedge rst) begin
+registor[0] <= A;
 if (rst) begin
         registor[0]  <= 16'b0; //A
         registor[1]  <= 16'b0; //B
@@ -45,18 +47,25 @@ if (rst) begin
         registor[30] <= 16'b0; //MARl
         registor[31] <= 16'b0; // MARh
         sp <= 16'h1A;
-end
-else if (wr) begin
-            registor[0] <= A;
+        instruction1 <= 32'b0;
+end else if ((wr_ex|su)|wr) begin
+if (wr_ex) begin
+registor[1] <= B;
+end 
+if (su) begin
+ sp <= sp_update;
+end 
+if (wr) begin
         if (addr != 5'b0) begin  // Prevent writing to r0 (A)
             registor[addr] <= update_r;
         end
     end
 end
+end
 
 always @(posedge clk) begin
- sp <= sp_update;
  pc1 <= pc;
+ instruction1 <= instruction;
 case (instruction[31:30])
     2'b00: begin
         if(instruction[2:0] == 3'b000) begin // normal r type

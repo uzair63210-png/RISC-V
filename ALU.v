@@ -6,7 +6,9 @@ module ALU (
     output reg  [15:0] alu_out,
     output reg  [15:0] b_out,
     output reg [5:0]  flags,
-    input  wire [5:0]  fg_i
+    input  wire [5:0]  fg_i,
+    output reg wr,
+    input f0
 );
     wire cin;
     wire [15:0] adder_sum, sub_sum;
@@ -17,6 +19,8 @@ module ALU (
     Adder_16bit adder_sub (.a(~A), .b(B), .cin(cin), .sum(sub_sum), .cout(sub_cout));
 
     always @(posedge clk or posedge rst) begin
+    
+    wr <= 1'b0;
         if (rst) begin
             alu_out <= 16'b0;
             b_out   <= 16'b0;
@@ -98,14 +102,15 @@ module ALU (
                 4'b1110: begin //multiple
                     {b_out, alu_out} <= A * B;
                     flags = {1'b0, 1'b0, ~|{b_out, alu_out}, 1'b0, 1'b0, ^{b_out, alu_out}};
+                    wr <= 1'b1;
                 end
                 
                 4'b1111: begin //flage operation
                     alu_out <= A;
                     if (sel == 2'b00) flags <= flags;
                     else if (sel == 2'b01)        flags[1] <= 1'b1;
-                    else if(sel == 2'b10)     flags[1] <= ~fg_i[1];
-                    else if (sel == 2'b11) flags <= fg_i;
+                    else if(sel == 2'b10)     flags[1] <= ~flags[1];
+                    else if (f0) flags <= fg_i;
                 end
                 
                 default: begin

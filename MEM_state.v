@@ -1,6 +1,6 @@
 module MEM_Buffer (input [31:0] instruction, output reg [31:0] instructions,input clk,rst,rd,sprd,
 input [4:0] ard,ars1,ars2,input [15:0] data_out,A,
-output reg [4:0] ard_,ars1_,ars2_, output reg [15:0] out);
+output reg [4:0] ard_,ars1_,ars2_, output reg [15:0] out,output reg return);
 
 always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -9,12 +9,16 @@ always @(posedge clk or posedge rst) begin
             ars1_ <= 5'b0;
             ars2_ <= 5'b0;
             out <= 16'b0;
+            return <= 1'b0;
         end  else begin
         instructions <= instruction;
             ard_ <= ard;
             ars1_ <= ars1;
             if (rd | sprd) begin
             out <= data_out;
+                if(sprd) begin
+                return <= 1'b1;
+                end
             end else begin
             out <= A;
             end
@@ -32,8 +36,9 @@ module memory #(
     input  wire [15:0] data_in, // Data to write
     output reg  [15:0] data_out, // Data read
     input  wire [15:0] sp,
-    input wire [31:0] pc,input wire [5:0] flags,
-    output wire [15:0] data_out1,data_out2
+    input wire [31:0] pc,
+    input wire [5:0] flags,
+    output wire [31:0] pc_out
 );
     reg [15:0] mem [0:SIZE-1];
 
@@ -55,22 +60,23 @@ module memory #(
                 data_out <= mem[sp];
             end
             if (spwr) begin
-            mem[sp] <= pc[31:16];
-            mem[sp - 1'b1] <= pc[16:0];
-            mem[sp - 2'b10] <= flags;
+            mem[sp] <= flags;
+            mem[sp - 1'b1] <= pc[31:16];
+            mem[sp - 2'b10] <=  pc[16:0];
             end else if (!rd) begin
                 data_out <= 16'b0;
             end
         end
     end
-assign data_out1 = mem[sp + 1'b1];
-assign data_out2 = mem[sp + 2'b10];
+assign pc_out = {mem[sp + 1'b1],mem[sp + 2'b10]};
 endmodule
 
 
-module MEM_state (input [31:0] instruction, input wire clk,rst, input [15:0] A,sp,data_in,
-input wire [31:0] pc,input wire [5:0] flags, output wire [15:0] data_out,data_out1,data_out2,
-output [31:0] instructions,output [4:0] ard_,ars1_,ars2_,output [15:0] out);
+module MEM_state (input [31:0] instruction, output [31:0] pc_out,
+input wire clk,rst, input [15:0] A,sp,data_in,
+input wire [31:0] pc,input wire [5:0] flags,
+output [31:0] instructions,input [4:0] ard,ars1,ars2,output [4:0] ard_,ars1_,ars2_,output [15:0] out,output return);
+
 wire wr,rd,sprd,spwr;
 wire d1;
 assign wr = &{instruction[31],~instruction[30],instruction[27]};
@@ -78,9 +84,9 @@ assign rd = &{instruction[31],~instruction[30],~instruction[27]};
 assign spwr = &{instruction[31],instruction[30],instruction[0]};
 assign sprd = &{~instruction[31],~instruction[30],~instruction[29],instruction[28],~instruction[27],~instruction[26],instruction[1],instruction[0]};
 
-memory(clk,rst,wr,rd,spwr,sprd,A,d1,data_out,sp,pc,flage,data_out1,data_out2);
+memory(clk,rst,wr,rd,spwr,sprd,A,data_in,d1,sp,pc,flage,pc_out);
 
 MEM_Buffer (instruction,instructions,clk,rst,rd,sprd,
-ard,ars1,ars2,d1,A,ard_,ars1_,ars2_,);
+ard,ars1,ars2,d1,A,ard_,ars1_,ars2_,out,return);
 
 endmodule

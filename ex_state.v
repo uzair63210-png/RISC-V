@@ -1,7 +1,7 @@
 module ex_Buffer(input [31:0] instruction, output reg [31:0] instructions,input clk,rst,
 input [15:0]sp_add,input [4:0] ard,ars1,ars2,input [15:0] rs1,rs2,B,A,
 input [5:0]  flag,output reg [5:0] flags,input wire [31:0] pc,output reg [31:0] pc1,
-output reg [4:0] ard_,ars1_,ars2_,output reg [15:0] rs1_,B_,A_,output reg [15:0]sp_add_);
+output reg [4:0] ard_,ars1_,ars2_,output reg [15:0] rs1_,B_,A_,output reg [15:0]sp_add_,output reg su);
 
 always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -15,7 +15,11 @@ always @(posedge clk or posedge rst) begin
             rs1_ <= 16'b0;
             sp_add_ <= 16'b0;
             pc1 <= 16'b0;
+            su <= 1'b0;
         end  else begin
+            if (&{~instruction[31],~instruction[30],~instruction[29],instruction[28],~instruction[27],~instruction[26],instruction[1],instruction[0]}) begin
+            su <= 1'b1;
+            end
         instructions <= instruction;
             flags <= flag;
             ard_ <= ard;
@@ -36,12 +40,12 @@ module ex_state ( input [31:0] instruction, output [31:0] instructions,input clk
 input [15:0]sp_add,input [4:0] ard,ars1,ars2,input [15:0] rs1,rs2,
 input [5:0]  flag,output [5:0] flags,input wire [31:0] pc,output [31:0] pc1,
 output [4:0] ard_,ars1_,ars2_,output [15:0] rs1_,B_,A_,output [15:0]sp_add_,
-input [3:0] con
+input [3:0] con,output su,wr,input f0
 );
 wire [15:0] A1,B1;
 wire [5:0]f; 
-ALU(rs1,rs2,con,clk,rst,instruction[10:9],A1,B1,f,flag);
+ALU(rs1,rs2,con,clk,rst,instruction[10:9],A1,B1,f,flag,wr,f0);
 
 ex_Buffer(instruction,instructions,clk,rst,sp_add,ard,ars1,ars2,rs1,rs2,B1,A1,
-f,flags,pc,pc1,ard_,ars1_,ars2_,rs1_,B_,A_,sp_add_);
+f,flags,pc,pc1,ard_,ars1_,ars2_,rs1_,B_,A_,sp_add_,su);
 endmodule
