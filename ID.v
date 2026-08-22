@@ -66,6 +66,7 @@ end
 always @(posedge clk) begin
  pc1 <= pc;
  instruction1 <= instruction;
+  brch <= 1'b0;
 case (instruction[31:30])
     2'b00: begin
         if(instruction[2:0] == 3'b000) begin // normal r type
