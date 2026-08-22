@@ -8,7 +8,7 @@ wire return;
 wire [15:0] A,B,data_out,update_r;
 wire [4:0] addr;
 wire [15:0] rs11,rs12,rs21;
-wire [4:0] ars11,ars12,ars13,ars21,ars22,ars23,arsd1,arsd2,arsd3;
+wire [4:0] ars11,ars12,ars13,ars21,ars22,ars23,ard1,ard2,ard3;
 
 assign pc_brch = (return) ? pc_out : pc_brch1;
 
