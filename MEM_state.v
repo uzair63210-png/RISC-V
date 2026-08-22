@@ -78,7 +78,7 @@ input wire [31:0] pc,input wire [5:0] flags,
 output [31:0] instructions,input [4:0] ard,ars1,ars2,output [4:0] ard_,ars1_,ars2_,output [15:0] out,output return);
 
 wire wr,rd,sprd,spwr;
-wire d1;
+wire [15:0] d1;
 assign wr = &{instruction[31],~instruction[30],instruction[27]};
 assign rd = &{instruction[31],~instruction[30],~instruction[27]};
 assign spwr = &{instruction[31],instruction[30],instruction[0]};
