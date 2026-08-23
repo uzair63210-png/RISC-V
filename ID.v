@@ -135,15 +135,6 @@ case (instruction[31:30])
          brch <= 1'b1;
          pc_branch = {registor[31], registor[30]};
          
-         if(instruction[2:0] == 3'b101) begin //call
-         con <= 4'b0010;
-         ard <= 5'b0;
-         ars1 <= 16'b0; // Source register 1
-         ars2 <= 16'b0; // Source register 2
-         rs1<= sp;
-         rs2 <= 16'h3;
-         end
-         
          case (instruction[28:26])
          3'b000 : begin // unconditon jumm
           brch = 1'b1;
@@ -177,6 +168,15 @@ case (instruction[31:30])
          if (!(registor[instruction[25:21]]==registor[instruction[20:16]])) begin brch <= 1'b0; end
          end   
          endcase
+         
+         if(brch == 1'b1 && instruction[2:0] == 3'b101) begin //call
+         con <= 4'b0010;
+         ard <= 5'b0;
+         ars1 <= 16'b0; // Source register 1
+         ars2 <= 16'b0; // Source register 2
+         rs1<= sp;
+         rs2 <= 16'h3;
+         end
     end
     //sel for flage is instution[15:16] in alu
 //for return i m going to to used 29 bit of instruction from branch type in mem state
