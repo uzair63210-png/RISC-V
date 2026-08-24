@@ -18,7 +18,7 @@ module ALU (
     Adder_16bit adder_add (.a(A), .b(B), .cin(cin), .sum(adder_sum), .cout(adder_cout));
     Adder_16bit adder_sub (.a(~A), .b(B), .cin(cin), .sum(sub_sum), .cout(sub_cout));
 
-    always @(posedge clk or posedge rst) begin
+    always @(*) begin
     
     wr <= 1'b0;
         if (rst) begin
