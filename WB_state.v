@@ -24,6 +24,6 @@ input [4:0] ard,ars1,ars2,output [4:0] addr,input [15:0] data,output wr, output 
 wire wr1;
 assign wr1 = (&{~instruction[31],~instruction[27]} | & {~instruction[31],~instruction[30]});
 
-WB_Buffer (clk,rst,wr1,ard,addr,data,wr,out);
+WB_Buffer buff (clk,rst,wr1,ard,addr,data,wr,out);
 
 endmodule

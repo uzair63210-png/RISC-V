@@ -20,8 +20,8 @@ output reg [31:0] pc,output reg [31:0] instruction);
 wire [31:0] pc_i;
 wire [31:0] instruction_i;
 
-IF(PC_branch,brch,rst,clk,instruction_i,pc_i);
-IF_Buffer (instruction_i,pc_i,clk,rst,
+IF  IFetch(PC_branch,brch,rst,clk,instruction_i,pc_i);
+IF_Buffer BUFF (instruction_i,pc_i,clk,rst,
 instruction_out,pc_out);
 
 
