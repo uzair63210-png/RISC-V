@@ -40,12 +40,11 @@ module ex_state ( input [31:0] instruction, output [31:0] instructions,input clk
 input [15:0]sp_add,input [4:0] ard,ars1,ars2,input [15:0] rs1,rs2,
 input [5:0]  flag,output [5:0] flags,input wire [31:0] pc,output [31:0] pc1,
 output [4:0] ard_,ars1_,ars2_,output [15:0] rs1_,B_,A_,output [15:0]sp_add_,
-input [3:0] con,output su,wr,input f0, output [4:0] add_r
+input [3:0] con,output su,wr,input f0
 );
 wire [15:0] A1,B1;
 wire [5:0]f; 
 
-assign add_r = ars1;
 ALU alu (rs1,rs2,con,clk,rst,instruction[10:9],A1,B1,f,flag,wr,f0);
 
 ex_Buffer buff(instruction,instructions,clk,rst,sp_add,ard,ars1,ars2,rs1,rs2,B1,A1,

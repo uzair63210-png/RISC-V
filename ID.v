@@ -3,13 +3,13 @@ output reg [31:0] pc_branch, output reg [31:0] instruction1,
 output wire [15:0]sp_add,output reg [31:0] pc1,
 output reg [4:0] ard,ars1,ars2,output reg [15:0] rs1,rs2, input wire [5:0]  flags,//alu
 input wr, input [4:0] addr, input [15:0] update_r, // for write back stage
-input wire [15:0] A,B, output wire [15:0] data_out,
-output reg [3:0] con, input wr_ex,su, input [4:0] add_r);
+input wire [15:0] A,B, output reg [15:0] data_out,
+output reg [3:0] con, input wr_ex,su);
 
 reg [15:0] registor[31:0]; // all registors 
 reg [15:0] sp; // default 1A hex
 assign sp_add = sp;
-assign data_out = registor[add_r];
+
 
 always @(posedge clk or posedge rst) begin
 registor[0] <= A;
@@ -129,6 +129,12 @@ case (instruction[31:30])
          con <= 4'b0010;
          end
          endcase
+         
+         if (instruction[27] == 1'b1) begin 
+         data_out <= registor[ars1];
+         end else begin
+         data_out <= data_out;
+         end
     end
     
     2'b11 : begin //jump or call. for call the sp will update on mem stage andd call instruction[0]==1
