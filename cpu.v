@@ -7,7 +7,7 @@ wire brch,wr_ex,wr,su;
 wire [15:0]sp_add,sp_add_,out;
 wire return;
 wire [15:0] A,B,data_out,update_r;
-wire [4:0] addr,flags;
+wire [4:0] addr,flags,add_r;
 wire [15:0] rs11,rs12,rs21;
 wire [4:0] ars11,ars12,ars13,ars21,ars22,ars23,ard1,ard2,ard3;
 
@@ -16,10 +16,10 @@ assign pc_brch = (return) ? pc_out : pc_brch1;
 IF_stage IF (pc_brch,brch|return,rst,clk,pc,instruction);
 
 ID ID (instruction,pc,clk,rst,brch,pc_brch1,instruction1,sp_add,pc1,ard1,ars11,
-ars21,rs11,rs21, flags,wr,addr, update_r,A,B,data_out,con,wr_ex,su);
+ars21,rs11,rs21, flags,wr,addr, update_r,A,B,data_out,con,wr_ex,su,add_r);
 
 ex_state EX (instruction1,instructions,clk,rst,sp_add,ard1,ars11,ars21,rs11,rs21,
-out[5:0],flags,pc1,pc2,ard2,ars12,ars22,rs12,B,A,sp_add_,con,su,wr_ex,return);
+out[5:0],flags,pc1,pc2,ard2,ars12,ars22,rs12,B,A,sp_add_,con,su,wr_ex,return,add_r);
 
 MEM_state MEM (instructions,pc_out,clk,rst,A,sp_add_,data_out,pc2,flags,instructions2,
 ard2,ars12,ars22,ard3,ars13,ars23,out,return);

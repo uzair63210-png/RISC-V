@@ -4,12 +4,12 @@ output wire [15:0]sp_add,output reg [31:0] pc1,
 output reg [4:0] ard,ars1,ars2,output reg [15:0] rs1,rs2, input wire [5:0]  flags,//alu
 input wr, input [4:0] addr, input [15:0] update_r, // for write back stage
 input wire [15:0] A,B, output wire [15:0] data_out,
-output reg [3:0] con, input wr_ex,su);
+output reg [3:0] con, input wr_ex,su, input [4:0] add_r);
 
 reg [15:0] registor[31:0]; // all registors 
 reg [15:0] sp; // default 1A hex
 assign sp_add = sp;
-assign data_out = registor[instruction[25:21]];
+assign data_out = registor[add_r];
 
 always @(posedge clk or posedge rst) begin
 registor[0] <= A;
@@ -105,7 +105,7 @@ case (instruction[31:30])
          con <= 4'b0100;
          end
          
-         2'b01 : begin
+         2'b01 : begin //load
          ard <= instruction[25:21];   // Destination register
          ars1 <= instruction[20:16]; // Source register 1
          rs1<= registor[instruction[20:16]];
@@ -113,7 +113,7 @@ case (instruction[31:30])
          con <= 4'b0010;
          end
         
-         2'b10 : begin
+         2'b10 : begin //store
          ars1 <= instruction[25:21];   // Destination register
          ars2 <= instruction[20:16]; // Source register 1
          rs1<= registor[instruction[20:16]];
