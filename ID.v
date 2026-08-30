@@ -1,191 +1,263 @@
-module ID (input wire [31:0] instruction, input wire [31:0] pc,input clk,rst,output reg brch, 
-output reg [31:0] pc_branch, output reg [31:0] instruction1,
-output wire [15:0]sp_add,output reg [31:0] pc1,
-output reg [4:0] ard,ars1,ars2,output reg [15:0] rs1,rs2, input wire [5:0]  flags,//alu
-input wr, input [4:0] addr, input [15:0] update_r, // for write back stage
-input wire [15:0] A,B, output reg [15:0] data_out,
-output reg [3:0] con, input wr_ex,su);
+module ID_Buffer (input wire clk, rst,input wire [31:0] instruction_in,input wire [31:0] pc_in,
+input wire brch_in,input wire [31:0] pc_branch_in,input wire [15:0] sp_add_in,
+input wire [4:0] ard_in, ars1_in, ars2_in,input wire [15:0] rs1_in, rs2_in,
+input wire [15:0] data_out_in,input wire [3:0] con_in,   
+output reg [31:0] instruction_out,output reg [31:0] pc_out, output reg brch_out,
+output reg [31:0] pc_branch_out,output reg [15:0] sp_add_out,
+output reg [4:0] ard_out, ars1_out, ars2_out, output reg [15:0] rs1_out, rs2_out,
+output reg [15:0] data_out_out,output reg [3:0] con_out
+);
 
-reg [15:0] registor[31:0]; // all registors 
-reg [15:0] sp; // default 1A hex
-assign sp_add = sp;
-
-
-always @(posedge clk or posedge rst) begin
-registor[0] <= A;
-if (rst) begin
-        registor[0]  <= 16'b0; //A
-        registor[1]  <= 16'b0; //B
-        registor[2]  <= 16'b0;
-        registor[3]  <= 16'b0;
-        registor[4]  <= 16'b0;
-        registor[5]  <= 16'b0;
-        registor[6]  <= 16'b0;
-        registor[7]  <= 16'b0;
-        registor[8]  <= 16'b0;
-        registor[9]  <= 16'b0;
-        registor[10] <= 16'b0;
-        registor[11] <= 16'b0;
-        registor[12] <= 16'b0;
-        registor[13] <= 16'b0;
-        registor[14] <= 16'b0;
-        registor[15] <= 16'b0;
-        registor[16] <= 16'b0;
-        registor[17] <= 16'b0;
-        registor[18] <= 16'b0;
-        registor[19] <= 16'b0;
-        registor[20] <= 16'b0;
-        registor[21] <= 16'b0;
-        registor[22] <= 16'b0;
-        registor[23] <= 16'b0;
-        registor[24] <= 16'b0;
-        registor[25] <= 16'b0;
-        registor[26] <= 16'b0;
-        registor[27] <= 16'b0;
-        registor[28] <= 16'b0;
-        registor[29] <= 16'b0;
-        registor[30] <= 16'b0; //MARl
-        registor[31] <= 16'b0; // MARh
-        sp <= 16'h1A;
-        instruction1 <= 32'b0;
-end else if ((wr_ex|su)|wr) begin
-if (wr_ex) begin
-registor[1] <= B;
-end 
-if (su) begin
- sp <= A;
-end 
-if (wr) begin
-        if (addr != 5'b0) begin  // Prevent writing to r0 (A)
-            registor[addr] <= update_r;
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            instruction_out <= 32'b0;
+            pc_out <= 32'b0;
+            brch_out <= 1'b0;
+            pc_branch_out <= 32'b0;
+            sp_add_out <= 16'h001A;
+            ard_out <= 5'b0;
+            ars1_out <= 5'b0;
+            ars2_out <= 5'b0;
+            rs1_out <= 16'b0;
+            rs2_out <= 16'b0;
+            data_out_out <= 16'b0;
+            con_out <= 4'b0;
+        end else begin
+            instruction_out <= instruction_in;
+            pc_out <= pc_in;
+            brch_out <= brch_in;
+            pc_branch_out <= pc_branch_in;
+            sp_add_out <= sp_add_in;
+            ard_out <= ard_in;
+            ars1_out <= ars1_in;
+            ars2_out <= ars2_in;
+            rs1_out <= rs1_in;
+            rs2_out <= rs2_in;
+            data_out_out <= data_out_in;
+            con_out <= con_in;
         end
     end
-end
-end
+endmodule
 
-always @(posedge clk) begin
- pc1 <= pc;
- instruction1 <= instruction;
-  brch <= 1'b0;
-case (instruction[31:30])
-    2'b00: begin
-        if(instruction[2:0] == 3'b000) begin // normal r type
-         ard <= instruction[25:21];   // Destination register (for R-type)
-         ars1 <= instruction[20:16]; // Source register 1
-         ars2 <= instruction[15:11]; // Source register 2
-         rs1<= registor[instruction[20:16]];
-         rs2 <= registor[instruction[15:11]];
-         con <= instruction[29:26];
-         end else if(instruction[1:0] == 2'b11 && instruction[29:26] == 4'b0100) begin //return
-         con <= instruction[29:26];
-         ard <= 5'b0;
-         ars1 <= 5'b0; // Source register 1
-         ars2 <= 5'b0; // Source register 2
-         rs1<= sp;
-         rs2 <= 16'h3;
-         end 
+
+module ID (
+input wire [31:0] instruction,pc,input clk, rst,output wire brch,output wire [31:0] pc_branch,
+output wire [31:0] instruction1,output wire [15:0] sp_add,output wire [31:0] pc1,
+output wire [4:0] ard, ars1, ars2,output wire [15:0] rs1, rs2,input wire [5:0] flags,input wr,
+input [4:0] addr,input [15:0] update_r,input wire [15:0] A, B,output wire [15:0] data_out,
+output wire [3:0] con,input wr_ex, su
+);
+
+    // Internal signals from decode logic
+    reg [31:0] instruction_decoded;
+    reg [31:0] pc_decoded;
+    reg brch_decoded;
+    reg [31:0] pc_branch_decoded;
+    reg [15:0] sp_add_decoded;
+    reg [4:0] ard_decoded, ars1_decoded, ars2_decoded;
+    reg [15:0] rs1_decoded, rs2_decoded;
+    reg [15:0] data_out_decoded;
+    reg [3:0] con_decoded;
+    
+    // Register file
+    reg [15:0] reg_file [0:31];
+    reg [15:0] sp;
+    
+    assign sp_add = sp_add_decoded;
+   
+    integer i;
+    always @(posedge clk or posedge rst) begin
+        reg_file[0] <= A;
+    
+        if (rst) begin
+            for (i = 0; i < 32; i = i + 1) begin
+                reg_file[i] <= 16'b0;
+            end
+            sp <= 16'h001A;
+        end else if (wr_ex || su || wr) begin
+            if (wr_ex) begin
+                reg_file[1] <= B;  // Write to register 1 (B)
+            end
+            if (su) begin
+                sp <= A;  // Update stack pointer
+            end
+            if (wr) begin
+                if (addr != 5'b0) begin  // Prevent writing to r0
+                    reg_file[addr] <= update_r;
+                end
+            end
+        end
     end
     
-    2'b01: begin //imm
-         ard <= instruction[25:21];   // Destination register (for R-type)
-         ars1 <= instruction[20:16]; // Source register 1
-         rs1<= registor[instruction[20:16]];
-         rs2 <= instruction[15:0];
-         con <= instruction[29:26];
-    end
-    
-    2'b10: begin //store
-        case (instruction[27:26])
+    // Decode logic (combinational)
+    always @(*) begin
+        // Default assignments
+        instruction_decoded = instruction;
+        pc_decoded = pc;
+        brch_decoded = 1'b0;
+        pc_branch_decoded = 32'b0;
+        sp_add_decoded = sp;
+        ard_decoded = 5'b0;
+        ars1_decoded = 5'b0;
+        ars2_decoded = 5'b0;
+        rs1_decoded = 16'b0;
+        rs2_decoded = 16'b0;
+        con_decoded = 4'b0;
+        data_out_decoded = 16'b0;
         
-         2'b00 : begin  // load
-         ard <= instruction[25:21];   // Destination register
-         ars1 <= instruction[20:16]; // Source register 1
-         rs1<= registor[instruction[20:16]];
-         rs2 <= instruction[15:0];
-         con <= 4'b0100;
-         end
-         
-         2'b01 : begin //load
-         ard <= instruction[25:21];   // Destination register
-         ars1 <= instruction[20:16]; // Source register 1
-         rs1<= registor[instruction[20:16]];
-         rs2 <= instruction[15:0];
-         con <= 4'b0010;
-         end
-        
-         2'b10 : begin //store
-         ars1 <= instruction[25:21];   // Destination register
-         ars2 <= instruction[20:16]; // Source register 1
-         rs1<= registor[instruction[20:16]];
-         rs2 <= instruction[15:0];
-         con <= 4'b0100;
-         end
-         
-         2'b11 : begin // store
-         ars1 <= instruction[25:21];   // Destination register
-         ars2 <= instruction[20:16]; // Source register 1
-         rs1<= registor[instruction[20:16]];
-         rs2 <= instruction[15:0];
-         con <= 4'b0010;
-         end
-         endcase
-         
-         if (instruction[27] == 1'b1) begin 
-         data_out <= registor[ars1];
-         end else begin
-         data_out <= data_out;
-         end
+        case (instruction[31:30])
+            2'b00: begin  // R-type instructions
+                if (instruction[2:0] == 3'b000) begin  // Normal R-type
+                    ard_decoded = instruction[25:21];    // Destination register
+                    ars1_decoded = instruction[20:16];   // Source register 1
+                    ars2_decoded = instruction[15:11];   // Source register 2
+                    rs1_decoded = reg_file[instruction[20:16]];
+                    rs2_decoded = reg_file[instruction[15:11]];
+                    con_decoded = instruction[29:26];
+                end else if (instruction[1:0] == 2'b11 && instruction[29:26] == 4'b0100) begin
+                    // Return instruction
+                    con_decoded = instruction[29:26];
+                    ard_decoded = 5'b0;
+                    ars1_decoded = 5'b0;
+                    ars2_decoded = 5'b0;
+                    rs1_decoded = sp;
+                    rs2_decoded = 16'h0003;
+                end
+            end
+            
+            2'b01: begin  // Immediate instructions
+                ard_decoded = instruction[25:21];    // Destination register
+                ars1_decoded = instruction[20:16];   // Source register 1
+                rs1_decoded = reg_file[instruction[20:16]];
+                rs2_decoded = instruction[15:0];     // Immediate value
+                con_decoded = instruction[29:26];
+            end
+            
+            2'b10: begin  // Load/Store instructions
+                case (instruction[27:26])
+                    2'b00: begin  // Load (add)
+                        ard_decoded = instruction[25:21];
+                        ars1_decoded = instruction[20:16];
+                        rs1_decoded = reg_file[instruction[20:16]];
+                        rs2_decoded = instruction[15:0];
+                        con_decoded = 4'b0100;
+                    end
+                    
+                    2'b01: begin  // Load (subtract)
+                        ard_decoded = instruction[25:21];
+                        ars1_decoded = instruction[20:16];
+                        rs1_decoded = reg_file[instruction[20:16]];
+                        rs2_decoded = instruction[15:0];
+                        con_decoded = 4'b0010;
+                    end
+                    
+                    2'b10: begin  // Store (add)
+                        ars1_decoded = instruction[25:21];
+                        ars2_decoded = instruction[20:16];
+                        rs1_decoded = reg_file[instruction[20:16]];
+                        rs2_decoded = instruction[15:0];
+                        con_decoded = 4'b0100;
+                    end
+                    
+                    2'b11: begin  // Store (subtract)
+                        ars1_decoded = instruction[25:21];
+                        ars2_decoded = instruction[20:16];
+                        rs1_decoded = reg_file[instruction[20:16]];
+                        rs2_decoded = instruction[15:0];
+                        con_decoded = 4'b0010;
+                    end
+                endcase
+                
+                // Data output for store operations
+                if (instruction[27] == 1'b1) begin
+                    data_out_decoded = reg_file[ars1_decoded];
+                end
+            end
+            
+            2'b11: begin  // Branch/Call instructions
+                brch_decoded = 1'b1;
+                pc_branch_decoded = {reg_file[31], reg_file[30]};  // PC = {MARh, MARl}
+                
+                case (instruction[28:26])
+                    3'b000: begin  // Unconditional jump
+                        brch_decoded = 1'b1;
+                    end
+                    
+                    3'b001: begin  // Jump on carry
+                        if (~flags[1]) brch_decoded = 1'b0;
+                    end
+                    
+                    3'b010: begin  // Jump on negative
+                        if (~flags[4]) brch_decoded = 1'b0;
+                    end
+                    
+                    3'b011: begin  // Jump on positive
+                        if (flags[4]) brch_decoded = 1'b0;
+                    end
+                    
+                    3'b100: begin  // Jump on even
+                        if (flags[0]) brch_decoded = 1'b0;
+                    end
+                    
+                    3'b101: begin  // Jump on odd
+                        if (~flags[0]) brch_decoded = 1'b0;
+                    end
+                    
+                    3'b110: begin  // Jump if reg1 < reg2
+                        if (reg_file[instruction[25:21]] < reg_file[instruction[20:16]]) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end
+                    
+                    3'b111: begin  // Jump if reg1 == reg2
+                        if (!(reg_file[instruction[25:21]] == reg_file[instruction[20:16]])) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end
+                endcase
+                
+                // Call instruction (branch with instruction[2:0] == 101)
+                if (brch_decoded == 1'b1 && instruction[2:0] == 3'b101) begin
+                    con_decoded = 4'b0010;  // Subtract operation for SP update
+                    ard_decoded = 5'b0;
+                    ars1_decoded = 5'b0;
+                    ars2_decoded = 5'b0;
+                    rs1_decoded = sp;
+                    rs2_decoded = 16'h0003;  // Subtract 3 from SP
+                end
+            end
+        endcase
     end
     
-    2'b11 : begin //jump or call. for call the sp will update on mem stage andd call instruction[0]==1
-         brch <= 1'b1;
-         pc_branch = {registor[31], registor[30]};
-         
-         case (instruction[28:26])
-         3'b000 : begin // unconditon jumm
-          brch = 1'b1;
-         end
-         
-         3'b001 : begin //jump on carry
-         if (~flags[1]) begin brch <= 1'b0; end
-         end
-         
-         3'b010 : begin //jump on negative
-         if (~flags[4]) begin brch <= 1'b0; end
-         end
-         
-         3'b011 : begin //jump on positive
-         if (flags[4]) begin brch <= 1'b0; end
-         end
-         
-         3'b100 : begin //jump on even
-         if (flags[0]) begin brch <= 1'b0; end
-         end
-         
-         3'b101 : begin //jump on odd
-         if (~flags[0]) begin brch <= 1'b0; end
-         end
-         
-         3'b110 : begin //jump on positive reg
-         if (registor[instruction[25:21]]<registor[instruction[20:16]]) begin brch <= 1'b0; end
-         end
-         
-         3'b111 : begin //jump on equal reg
-         if (!(registor[instruction[25:21]]==registor[instruction[20:16]])) begin brch <= 1'b0; end
-         end   
-         endcase
-         
-         if(brch == 1'b1 && instruction[2:0] == 3'b101) begin //call
-         con <= 4'b0010;
-         ard <= 5'b0;
-         ars1 <= 16'b0; // Source register 1
-         ars2 <= 16'b0; // Source register 2
-         rs1<= sp;
-         rs2 <= 16'h3;
-         end
-    end
-    //sel for flage is instution[15:16] in alu
-//for return i m going to to used 29 bit of instruction from branch type in mem state
-endcase
-end
+    // Buffer instance
+    ID_Buffer buffer_inst (
+        .clk(clk),
+        .rst(rst),
+        .instruction_in(instruction_decoded),
+        .pc_in(pc_decoded),
+        .brch_in(brch_decoded),
+        .pc_branch_in(pc_branch_decoded),
+        .sp_add_in(sp_add_decoded),
+        .ard_in(ard_decoded),
+        .ars1_in(ars1_decoded),
+        .ars2_in(ars2_decoded),
+        .rs1_in(rs1_decoded),
+        .rs2_in(rs2_decoded),
+        .data_out_in(data_out_decoded),
+        .con_in(con_decoded),
+        
+        .instruction_out(instruction1),
+        .pc_out(pc1),
+        .brch_out(brch),
+        .pc_branch_out(pc_branch),
+        .sp_add_out(sp_add),
+        .ard_out(ard),
+        .ars1_out(ars1),
+        .ars2_out(ars2),
+        .rs1_out(rs1),
+        .rs2_out(rs2),
+        .data_out_out(data_out),
+        .con_out(con)
+    );
+
 endmodule
