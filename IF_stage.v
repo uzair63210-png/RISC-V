@@ -15,12 +15,12 @@ endmodule
 
 
 module IF_stage (input [31:0] PC_branch,input brch,rst,clk,
-output reg [31:0] pc,output reg [31:0] instruction);
+output reg [31:0] pc,output reg [31:0] instruction, input stall,wrong);
 
 wire [31:0] pc_i;
 wire [31:0] instruction_i;
 
-IF  IFetch(PC_branch,brch,rst,clk,instruction_i,pc_i);
+IF  IFetch(PC_branch,brch,rst,clk,instruction_i,pc_i, stall,wrong);
 IF_Buffer BUFF (instruction_i,pc_i,clk,rst,
 instruction_out,pc_out);
 
