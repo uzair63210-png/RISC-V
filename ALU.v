@@ -12,7 +12,7 @@ module ALU (
 );
     wire cin;
     wire [15:0] add_in,result;
-    wire        adder_cout, sub_cout;
+    wire        adder_cout;
     assign cin = (con[0])? flags[1] : 1'b0;
     assign add_in = (con[2])? A : ~A;
     Adder_16bit adder_add (.a(add_in), .b(B), .cin(cin), .sum(result), .cout(adder_cout));
@@ -38,12 +38,12 @@ module ALU (
                 
                 4'b0010: begin // sub
                     alu_out <= ~result;
-                    flags = {sub_cout, sub_cout, ~|alu_out,A[7]&B[7] , sub_cout, ^alu_out};
+                    flags = {adder_cout, adder_cout, ~|alu_out,A[7]&B[7] , adder_cout, ^alu_out};
                 end
                 
                 4'b0011: begin // sub with borrow
                     alu_out <= ~result;
-                    flags = {sub_cout, sub_cout, ~|alu_out,A[7]&B[7] , sub_cout, ^alu_out};
+                    flags = {adder_cout, adder_cout, ~|alu_out,A[7]&B[7] , adder_cout, ^alu_out};
                 end
                 
                 4'b0100: begin //add
