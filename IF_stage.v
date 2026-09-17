@@ -1,11 +1,11 @@
 module IF_Buffer (input wire [31:0] instruction_in,input wire [31:0] pc_in,input clk,rst,
-output reg [31:0] instruction_out,output reg [31:0] pc_out);
+output reg [31:0] instruction_out,output reg [31:0] pc_out,input stall);
 
 always@(posedge clk) begin
 if (rst) begin
 pc_out <= 32'b0;
 instruction_out <= 32'b0;
-end else begin
+end else if (!stall) begin
 pc_out <= pc_in;
 instruction_out <= instruction_in;
 end

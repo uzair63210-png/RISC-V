@@ -5,7 +5,7 @@ input wire [15:0] data_out_in,input wire [3:0] con_in,
 output reg [31:0] instruction_out,output reg [31:0] pc_out, output reg brch_out,
 output reg [31:0] pc_branch_out,output reg [15:0] sp_add_out,
 output reg [4:0] ard_out, ars1_out, ars2_out, output reg [15:0] rs1_out, rs2_out,
-output reg [15:0] data_out_out,output reg [3:0] con_out
+output reg [15:0] data_out_out,output reg [3:0] con_out,input wire stall
 );
 
     always @(posedge clk or posedge rst) begin
@@ -22,7 +22,7 @@ output reg [15:0] data_out_out,output reg [3:0] con_out
             rs2_out <= 16'b0;
             data_out_out <= 16'b0;
             con_out <= 4'b0;
-        end else begin
+        end else if (!stall )begin
             instruction_out <= instruction_in;
             pc_out <= pc_in;
             brch_out <= brch_in;
@@ -45,7 +45,7 @@ input wire [31:0] instruction,pc,input clk, rst,output wire brch,output wire [31
 output wire [31:0] instruction1,output wire [15:0] sp_add,output wire [31:0] pc1,
 output wire [4:0] ard, ars1, ars2,output wire [15:0] rs1, rs2,input wire [5:0] flags,input wr,
 input [4:0] addr,input [15:0] update_r,input wire [15:0] A, B,output wire [15:0] data_out,
-output wire [3:0] con,input wr_ex, su
+output wire [3:0] con,input wr_ex, su,input wire stall
 );
 
     // Internal signals from decode logic
@@ -257,7 +257,8 @@ output wire [3:0] con,input wr_ex, su
         .rs1_out(rs1),
         .rs2_out(rs2),
         .data_out_out(data_out),
-        .con_out(con)
+        .con_out(con),
+        .stall(stall)
     );
 
 endmodule
