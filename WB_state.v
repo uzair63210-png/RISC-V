@@ -1,5 +1,5 @@
 module WB_Buffer (input [31:0] instruction ,input clk,rst,iwr,
-input [4:0] ard,output reg [5:0] addr,input [15:0] data,output reg wr, output reg [15:0] out
+input [5:0] ard,output reg [5:0] addr,input [15:0] data,output reg wr, output reg [15:0] out
 );
 
 always @(posedge clk or posedge rst) begin
@@ -9,7 +9,7 @@ always @(posedge clk or posedge rst) begin
             wr <= 1'b0;
         end else begin
             addr[4:0] <= ard;
-            addr [5] <= ~((instruction[31]&instruction[30])| ((instruction[31]&~instruction[30]&instruction[27])));
+            addr [5] <= (~((instruction[31]&instruction[30])| ((instruction[31]&~instruction[30]&instruction[27]))))?  1'b1 : ard[5];
             out <= data;
             wr <= iwr;
         end
@@ -21,7 +21,7 @@ endmodule
 
 
 module WB_state (input [31:0] instruction,input clk,rst,
-input [4:0] ard,ars1,ars2,output [5:0] addr,input [15:0] data,output wr, output [15:0] out);
+input [5:0] ard,input [4:0] ars1,ars2,output [5:0] addr,input [15:0] data,output wr, output [15:0] out);
 wire wr1;
 assign wr1 = (&{~instruction[31],~instruction[27]} | & {~instruction[31],~instruction[30]});
 

@@ -1,5 +1,5 @@
 module MEM_Buffer (input [31:0] instruction, output reg [31:0] instructions,input clk,rst,rd,sprd,
-input [4:0] ard,ars1,ars2,input [15:0] data_out,A,
+input [5:0] ard,input [4:0] ars1,ars2,input [15:0] data_out,A,
 output reg [5:0] ard_,output reg [4:0] ars1_,ars2_, output reg [15:0] out,output reg return);
 
 always @(posedge clk or posedge rst) begin
@@ -12,8 +12,8 @@ always @(posedge clk or posedge rst) begin
             return <= 1'b0;
         end  else begin
         instructions <= instruction;
-            ard_[4:0] <= ard;
-            ard_[5] <= (instruction[31]&(~instruction[30]));
+            ard_[4:0] <= ard[4:0];
+            ard_[5] <= (instruction[31]&(~instruction[30]))? 1'b1 : ard[5];
             ars1_ <= ars1;
             if (rd | sprd) begin
             out <= data_out;
@@ -76,7 +76,7 @@ endmodule
 module MEM_state (input [31:0] instruction, output [31:0] pc_out,
 input wire clk,rst, input [15:0] A,sp,data_in,
 input wire [31:0] pc,input wire [5:0] flags,
-output [31:0] instructions,input [4:0] ard,ars1,ars2,output [5:0] 
+output [31:0] instructions,input [5:0] ard,input [4:0] ars1,ars2,output [5:0] 
 ard_,output [4:0] ars1_,ars2_,output [15:0] out,output return);
 
 wire wr,rd,sprd,spwr;

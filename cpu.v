@@ -28,8 +28,8 @@ out[5:0],flags,pc1,pc2,ard2,ars12,ars22,rs12,B,A,sp_add_,con,su,wr_ex,return,is_
 data_in,data_out);
 
 MEM_state MEM (instructions,pc_out,clk,rst,A,sp_add_,data_out,pc2,flags,instructions2,
-ard2[4:0],ars12,ars22,ard3,ars13,ars23,out,return);
+ard2,ars12,ars22,ard3,ars13,ars23,out,return);
 
-WB_state WB (instructions2,clk,rst,ard3[4:0],ars13,ars23,addr,out,wr,update_r);
+WB_state WB (instructions2,clk,rst,ard3,ars13,ars23,addr,out,wr,update_r);
 
 endmodule
