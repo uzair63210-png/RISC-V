@@ -20,11 +20,6 @@ module ALU (
     always @(*) begin
     
     wr <= 1'b0;
-        if (rst) begin
-            alu_out <= 16'b0;
-            b_out   <= 16'b0;
-            flags   <= 6'b0;
-        end else begin
             case (con)
                 4'b0000: begin //move
                     alu_out <= A;
@@ -118,7 +113,6 @@ module ALU (
                 end
             endcase
         end
-    end
 
 
 endmodule
