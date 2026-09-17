@@ -23,7 +23,7 @@ endmodule
 module WB_state (input [31:0] instruction,input clk,rst,
 input [5:0] ard,input [4:0] ars1,ars2,output [5:0] addr,input [15:0] data,output wr, output [15:0] out);
 wire wr1;
-assign wr1 = (&{~instruction[31],~instruction[27]} | & {~instruction[31],~instruction[30]});
+assign wr1 = (&{~instruction[30],~instruction[27]} |  (~instruction[31]));
 
 WB_Buffer buff (instruction,clk,rst,wr1,ard,addr,data,wr,out);
 

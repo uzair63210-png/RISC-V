@@ -21,14 +21,14 @@ assign pc_brch = (return) ? pc_out : pc_brch1;
 IF_stage IF (pc_brch,brch|return,rst,clk,pc,instruction, stall, 1'b0);
 
 ID ID (instruction,pc,clk,rst,brch,pc_brch1,instruction1,sp_add,pc1,ard1,ars11,
-ars21,rs11,rs21, flags,wr,addr[4:0], update_r,A,B,data_in,con,wr_ex,su,stall);
+ars21,rs11,rs21, flags,wr,addr[4:0], update_r,A,B,data_out,con,wr_ex,su,stall,ard2,A,
+ard3,out,addr,update_r);
 
 forwarding_unit (ard2,A,ard3,out,addr,update_r,ars11, ars21,
     rs11,rs21,is_load_ex,out1, out2,stall);
     
 ex_state EX (instruction1,instructions,clk,rst,sp_add,ard1,ars11,ars21,out1,out2,
-out[5:0],flags,pc1,pc2,ard2,ars12,ars22,rs12,B,A,sp_add_,con,su,wr_ex,return,is_load_ex,
-data_in,data_out);
+out[5:0],flags,pc1,pc2,ard2,ars12,ars22,rs12,B,A,sp_add_,con,su,wr_ex,return,is_load_ex);
 
 MEM_state MEM (instructions,pc_out,clk,rst,A,sp_add_,data_out,pc2,flags,instructions2,
 ard2,ars12,ars22,ard3,ars13,ars23,out,return);

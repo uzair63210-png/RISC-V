@@ -20,7 +20,6 @@ output reg [15:0] data_out_out,output reg [3:0] con_out,input wire stall
             ars2_out <= 5'b0;
             rs1_out <= 16'b0;
             rs2_out <= 16'b0;
-            data_out_out <= 16'b0;
             con_out <= 4'b0;
         end else if (!stall )begin
             instruction_out <= instruction_in;
@@ -33,7 +32,6 @@ output reg [15:0] data_out_out,output reg [3:0] con_out,input wire stall
             ars2_out <= ars2_in;
             rs1_out <= rs1_in;
             rs2_out <= rs2_in;
-            data_out_out <= data_out_in;
             con_out <= con_in;
         end
     end
@@ -45,7 +43,13 @@ input wire [31:0] instruction,pc,input clk, rst,output wire brch,output wire [31
 output wire [31:0] instruction1,output wire [15:0] sp_add,output wire [31:0] pc1,
 output wire [4:0] ard, ars1, ars2,output wire [15:0] rs1, rs2,input wire [5:0] flags,input wr,
 input [4:0] addr,input [15:0] update_r,input wire [15:0] A, B,output wire [15:0] data_out,
-output wire [3:0] con,input wr_ex, su,input wire stall
+output wire [3:0] con,input wr_ex, su,input wire stall,
+input wire [5:0] rd_ex,      // {we, addr} from EX stage = ard2
+    input wire [15:0] val_ex,    // ALU output A from EX stage
+    input wire [5:0] rd_mm,      // {we, addr} from MEM stage = ard3
+    input wire [15:0] val_mm,    // MEM output = out
+    input wire [5:0] rd_wb,      // {we, addr} from WB stage = addr
+    input wire [15:0] val_wb     // WB data = update_r
 );
 
     // Internal signals from decode logic
@@ -152,16 +156,16 @@ output wire [3:0] con,input wr_ex, su,input wire stall
                     end
                     
                     2'b10: begin  // Store (add)
-                        ars1_decoded = instruction[25:21];
-                        ars2_decoded = instruction[20:16];
+                        ard_decoded = instruction[25:21];
+                        ars1_decoded = instruction[20:16];
                         rs1_decoded = reg_file[instruction[20:16]];
                         rs2_decoded = instruction[15:0];
                         con_decoded = 4'b0100;
                     end
                     
                     2'b11: begin  // Store (subtract)
-                        ars1_decoded = instruction[25:21];
-                        ars2_decoded = instruction[20:16];
+                        ard_decoded = instruction[25:21];
+                        ars1_decoded = instruction[20:16];
                         rs1_decoded = reg_file[instruction[20:16]];
                         rs2_decoded = instruction[15:0];
                         con_decoded = 4'b0010;
@@ -169,9 +173,17 @@ output wire [3:0] con,input wr_ex, su,input wire stall
                 endcase
                 
                 // Data output for store operations
-                if (instruction[27] == 1'b1) begin
-                    data_out_decoded = reg_file[ars1_decoded];
-                end
+                if (instruction[27] == 1'b1) begin  // store operation
+    // Priority: EX > MEM > WB > regfile (most recent wins)
+    if (rd_ex[5] && (rd_ex[4:0] == ard_decoded) && (ard_decoded != 5'b0))
+        data_out_decoded = val_ex;
+    else if (rd_mm[5] && (rd_mm[4:0] == ard_decoded) && (ard_decoded != 5'b0))
+        data_out_decoded = val_mm;
+    else if (rd_wb[5] && (rd_wb[4:0] == ard_decoded) && (ard_decoded != 5'b0))
+        data_out_decoded = val_wb;
+    else
+        data_out_decoded = reg_file[ard_decoded];
+end
             end
             
             2'b11: begin  // Branch/Call instructions
@@ -243,7 +255,6 @@ output wire [3:0] con,input wr_ex, su,input wire stall
         .ars2_in(ars2_decoded),
         .rs1_in(rs1_decoded),
         .rs2_in(rs2_decoded),
-        .data_out_in(data_out_decoded),
         .con_in(con_decoded),
         
         .instruction_out(instruction1),
@@ -256,7 +267,6 @@ output wire [3:0] con,input wr_ex, su,input wire stall
         .ars2_out(ars2),
         .rs1_out(rs1),
         .rs2_out(rs2),
-        .data_out_out(data_out),
         .con_out(con),
         .stall(stall)
     );
