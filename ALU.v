@@ -1,7 +1,6 @@
 module ALU (
     input  wire [15:0] A, B,
     input  wire [3:0]  con,
-    input  wire        clk, rst,
     input  wire [1:0]      sel,
     output reg  [15:0] alu_out,
     output reg  [15:0] b_out,
