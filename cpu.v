@@ -9,7 +9,8 @@ wire brch,wr_ex,wr,su;
 wire [15:0]sp_add,sp_add_,out;
 wire return;
 wire [15:0] A,B,data_out,update_r;
-wire [4:0] addr,flags;
+wire [5:0] addr;
+wire [4:0] flags;
 wire [15:0] rs11,rs12,rs21;
 wire [4:0] ars11,ars12,ars13,ars21,ars22,ars23;
 wire [4:0] ard1;
@@ -20,7 +21,7 @@ assign pc_brch = (return) ? pc_out : pc_brch1;
 IF_stage IF (pc_brch,brch|return,rst,clk,pc,instruction, stall, 1'b0);
 
 ID ID (instruction,pc,clk,rst,brch,pc_brch1,instruction1,sp_add,pc1,ard1,ars11,
-ars21,rs11,rs21, flags,wr,addr, update_r,A,B,data_in,con,wr_ex,su,stall);
+ars21,rs11,rs21, flags,wr,addr[4:0], update_r,A,B,data_in,con,wr_ex,su,stall);
 
 forwarding_unit (ard2,A,ard3,out,addr,update_r,ars11, ars21,
     rs11,rs21,is_load_ex,out1, out2,stall);

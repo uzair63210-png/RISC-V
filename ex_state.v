@@ -46,7 +46,7 @@ input [15:0]sp_add,input [4:0] ard,ars1,ars2,input [15:0] rs1,rs2,
 input [5:0]  flag,output [5:0] flags,input wire [31:0] pc,output [31:0] pc1,
 output [5:0] ard_,output [4:0] ars1_,ars2_,output [15:0] rs1_,B_,A_,output [15:0]sp_add_,
 input [3:0] con,output su,wr,input f0, output is_load_ex,
-input wire [15:0] data_in,output reg [15:0] data_out);
+input wire [15:0] data_in,output [15:0] data_out);
 wire [15:0] A1,B1;
 wire [5:0]f; 
 
