@@ -24,7 +24,7 @@ ID ID (instruction,pc,clk,rst,brch,pc_brch1,instruction1,sp_add,pc1,ard1,ars11,
 ars21,rs11,rs21, flags,wr,addr[4:0], update_r,A,B,data_out,con,wr_ex,su,stall,ard2,A,
 ard3,out,addr,update_r);
 
-forwarding_unit (ard2,A,ard3,out,addr,update_r,ars11, ars21,
+forwarding_unit fu (ard2,A,ard3,out,addr,update_r,ars11, ars21,
     rs11,rs21,is_load_ex,out1, out2,stall);
     
 ex_state EX (instruction1,instructions,clk,rst,sp_add,ard1,ars11,ars21,out1,out2,
