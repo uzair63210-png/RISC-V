@@ -63,7 +63,7 @@ module memory #(
             if (spwr) begin
             mem[sp] <= flags;
             mem[sp - 1'b1] <= pc[31:16];
-            mem[sp - 2'b10] <=  pc[16:0];
+            mem[sp - 2'b10] <=  pc[15:0];
             end else if (!rd & (~sprd)) begin
                 data_out <= 16'b0;
             end
