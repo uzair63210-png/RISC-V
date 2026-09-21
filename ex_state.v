@@ -20,6 +20,8 @@ always @(posedge clk or posedge rst) begin
         end  else begin
             if (&{~instruction[31],~instruction[30],~instruction[29],instruction[28],~instruction[27],~instruction[26],instruction[1],instruction[0]}) begin
             su <= 1'b1;
+            end else begin
+            su <= 1'b0;
             end
         instructions <= instruction;
             flags <= flag;
