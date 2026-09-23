@@ -99,11 +99,12 @@ module ALU (
                 end
                 
                 4'b1111: begin //flage operation
-                    alu_out = A;
-                    if (sel == 2'b00) flags = flags;
-                    else if (sel == 2'b01)        flags[1] = 1'b1;
-                    else if(sel == 2'b10)     flags[1] = ~flags[1];
-                    else if (f0) flags = fg_i;
+                  alu_out = A;
+                  flags = fg_i; // default hold old flags
+                  if (sel == 2'b01) flags = {fg_i[5:2], 1'b1, fg_i[0]}; // set carry
+                  else if (sel == 2'b10) flags = {fg_i[5:2], ~fg_i[1], fg_i[0]};
+                  else if (f0) flags = fg_i; // restore
+
                 end
                 
                 default: begin
