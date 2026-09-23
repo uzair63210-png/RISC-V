@@ -53,5 +53,5 @@ ALU alu (rs1,rs2,con,instruction[10:9],A1,B1,f,flag,wr,f0);
 ex_Buffer buff(instruction,instructions,clk,rst,sp_add,ard,ars1,ars2,rs1,rs2,B1,A1,
 f,flags,pc,pc1,ard_,ars1_,ars2_,rs1_,B_,A_,sp_add_,su);
 
-assign is_load_ex = instruction[31]&(~instruction[30]);
+assign is_load_ex = instruction[31] & ~instruction[30] & ~instruction[27];
 endmodule

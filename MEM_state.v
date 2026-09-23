@@ -22,6 +22,7 @@ always @(posedge clk or posedge rst) begin
                 end
             end else begin
             out <= A;
+            return <= 1'b0;
             end
             ars2_ <= ars2;
         end
@@ -62,8 +63,8 @@ module memory #(
             end
             if (spwr) begin
             mem[sp] <= flags;
-            mem[sp - 1'b1] <= pc[31:16];
-            mem[sp - 2'b10] <=  pc[15:0];
+            mem[sp - 1'b1] <= pc[15:0];
+            mem[sp - 2'b10] <=  pc[31:16];
             end else if (!rd & (~sprd)) begin
                 data_out <= 16'b0;
             end

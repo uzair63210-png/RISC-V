@@ -9,7 +9,7 @@ output reg [15:0] data_out_out,output reg [3:0] con_out,input wire stall
 );
 
     always @(posedge clk or posedge rst) begin
-        if (rst) begin
+        if (rst | stall) begin
             instruction_out <= 32'b0;
             pc_out <= 32'b0;
             brch_out <= 1'b0;
