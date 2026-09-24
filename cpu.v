@@ -1,6 +1,6 @@
 module cpu (input clk,rst);
 
-wire  flag_in;
+wire [5:0] flag_in;
 wire [15:0] out1, out2,data_in;
 wire is_load_ex,stall;
 wire [3:0] con;
@@ -11,7 +11,7 @@ wire [15:0]sp_add,sp_add_,out;
 wire return;
 wire [15:0] A,B,data_out,update_r;
 wire [5:0] addr;
-wire [4:0] flags;
+wire [5:0] flags;
 wire [15:0] rs11,rs12,rs21;
 wire [4:0] ars11,ars12,ars13,ars21,ars22,ars23;
 wire [4:0] ard1;
