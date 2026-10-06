@@ -9,5 +9,9 @@ try to built the 5 stage pipeline processor and improve it as I gain knowledge
 10 load and store with offset
 11 branch instruction 
 <br> 15 alu operations. 32 16-bit registers and Harvard architecture 
+
 # version 2 uploaded on 7/9/2026 
 <br> add forwarding unit for EX state
+
+# version 2.1 uploaded on 6/10/2026 
+add forwarding unit for mm state
