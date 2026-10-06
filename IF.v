@@ -15,7 +15,7 @@ end
 else  begin 
  prev_pc <= pc;
  pc <= next_pc;
-instruction <= instruction_memory[pc];
+if (!stall) instruction <= instruction_memory[pc];
 end 
 end
 endmodule

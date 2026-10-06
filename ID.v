@@ -1,99 +1,119 @@
-module ID_Buffer (input wire clk, rst,input wire [31:0] instruction_in,input wire [31:0] pc_in,
-input wire brch_in,input wire [31:0] pc_branch_in,input wire [15:0] sp_add_in,
-input wire [4:0] ard_in, ars1_in, ars2_in,input wire [15:0] rs1_in, rs2_in,
-input wire [15:0] data_out_in,input wire [3:0] con_in,   
-output reg [31:0] instruction_out,output reg [31:0] pc_out, output reg brch_out,
-output reg [31:0] pc_branch_out,output reg [15:0] sp_add_out,
-output reg [4:0] ard_out, ars1_out, ars2_out, output reg [15:0] rs1_out, rs2_out,
-output reg [15:0] data_out_out,output reg [3:0] con_out,input wire stall
+module ID_Buffer (input wire clk, rst, stall,
+input wire [31:0] instruction_in, pc_in,
+input wire brch_in,
+input wire [31:0] pc_branch_in,
+input wire [15:0] sp_add_in,
+input wire [4:0] ard_in, ars1_in, ars2_in,
+input wire use1_in, use2_in,
+input wire [15:0] rs1_in, rs2_in,
+input wire [3:0] con_in,
+output reg [31:0] instruction_out, pc_out,
+output reg brch_out,
+output reg [31:0] pc_branch_out,
+output reg [15:0] sp_add_out,
+output reg [4:0] ard_out, ars1_out, ars2_out,
+output reg use1_out, use2_out,
+output reg [15:0] rs1_out, rs2_out,
+output reg [3:0] con_out
 );
 
     always @(posedge clk or posedge rst) begin
         if (rst | stall) begin
-            instruction_out <= 32'b0;
-            pc_out <= 32'b0;
-            brch_out <= 1'b0;
-            pc_branch_out <= 32'b0;
+            instruction_out <= 32'b0;  pc_out <= 32'b0;
+            brch_out <= 1'b0;          pc_branch_out <= 32'b0;
             sp_add_out <= 16'h001A;
-            ard_out <= 5'b0;
-            ars1_out <= 5'b0;
-            ars2_out <= 5'b0;
-            rs1_out <= 16'b0;
-            rs2_out <= 16'b0;
-            con_out <= 4'b0;
+            ard_out <= 5'b0;  ars1_out <= 5'b0;  ars2_out <= 5'b0;
+            use1_out <= 1'b0; use2_out <= 1'b0;
+            rs1_out <= 16'b0; rs2_out <= 16'b0;
+            con_out <= (stall) ? 4'b1111: 4'b0;
         end else if (!stall )begin
-            instruction_out <= instruction_in;
-            pc_out <= pc_in;
-            brch_out <= brch_in;
-            pc_branch_out <= pc_branch_in;
+            instruction_out <= instruction_in;  pc_out <= pc_in;
+            brch_out <= brch_in;                pc_branch_out <= pc_branch_in;
             sp_add_out <= sp_add_in;
-            ard_out <= ard_in;
-            ars1_out <= ars1_in;
-            ars2_out <= ars2_in;
-            rs1_out <= rs1_in;
-            rs2_out <= rs2_in;
+            ard_out <= ard_in;  ars1_out <= ars1_in;  ars2_out <= ars2_in;
+            use1_out <= use1_in; use2_out <= use2_in;
+            rs1_out <= rs1_in;  rs2_out <= rs2_in;
             con_out <= con_in;
         end
     end
 endmodule
 
 
-module ID (
-input wire [31:0] instruction,pc,input clk, rst,output wire brch,output wire [31:0] pc_branch,
-output wire [31:0] instruction1,output wire [15:0] sp_add,output wire [31:0] pc1,
-output wire [4:0] ard, ars1, ars2,output wire [15:0] rs1, rs2,input wire [5:0] flags,input wr,
-input [4:0] addr,input [15:0] update_r,input wire [15:0] A, B,output wire [15:0] data_out,
-output wire [3:0] con,input wr_ex, su,input wire stall,
-input wire [5:0] rd_ex,      // {we, addr} from EX stage = ard2
-    input wire [15:0] val_ex,    // ALU output A from EX stage
-    input wire [5:0] rd_mm,      // {we, addr} from MEM stage = ard3
-    input wire [15:0] val_mm,    // MEM output = out
-    input wire [5:0] rd_wb,      // {we, addr} from WB stage = addr
-    input wire [15:0] val_wb     // WB data = update_r
-);
 
+module ID (
+input wire [31:0] instruction, pc,
+input clk, rst,
+output wire brch,
+output wire [31:0] pc_branch,
+output wire [31:0] instruction1,
+output wire [15:0] sp_add,
+output wire [31:0] pc1,
+output wire [4:0] ard, ars1, ars2,
+output wire use1, use2,            // ID/EX: operand really is a register (needed to tell r0/acc from "no reg")
+output wire [15:0] rs1, rs2,
+input wire [5:0] flags,
+input wire wr,                     // WB write enable
+input [4:0] addr,                  // WB dest
+input [15:0] update_r,             // WB data
+input wire [15:0] A, B,            // EX/MEM ALU results
+output wire [3:0] con,
+input wire wr_ex, su,
+input wire stall,
+// ---- for load-use hazard unit: sources of the instruction currently in ID
+output wire [4:0] ars1_id, ars2_id,
+// farwording to mm
+input wire [4:0] st_addr,
+output wire [15:0] st_rdata
+);
+ 
     // Internal signals from decode logic
-    reg [31:0] instruction_decoded;
-    reg [31:0] pc_decoded;
+    reg [31:0] instruction_decoded, pc_decoded;
     reg brch_decoded;
     reg [31:0] pc_branch_decoded;
     reg [15:0] sp_add_decoded;
     reg [4:0] ard_decoded, ars1_decoded, ars2_decoded;
+    reg use1_decoded, use2_decoded;
     reg [15:0] rs1_decoded, rs2_decoded;
-    reg [15:0] data_out_decoded;
     reg [3:0] con_decoded;
     
     // Register file
     reg [15:0] reg_file [0:31];
     reg [15:0] sp;
     
+    assign ars1_id = ars1_decoded;
+    assign ars2_id = ars2_decoded;
+    assign st_rdata = reg_file[st_addr]; 
     assign sp_add = sp_add_decoded;
    
     integer i;
     always @(posedge clk or posedge rst) begin
-        reg_file[0] <= A;
-    
         if (rst) begin
-            for (i = 0; i < 32; i = i + 1) begin
-                reg_file[i] <= 16'b0;
-            end
+            for (i = 0; i < 32; i = i + 1) reg_file[i] <= 16'b0;
             sp <= 16'h001A;
-        end else if (wr_ex || su || wr) begin
-            if (wr_ex) begin
-                reg_file[1] <= B;  // Write to register 1 (B)
-            end
-            if (su) begin
-                sp <= A;  // Update stack pointer
-            end
-            if (wr) begin
-                if (addr != 5'b0) begin  // Prevent writing to r0
-                    reg_file[addr] <= update_r;
-                end
-            end
+        end else begin
+            reg_file[0] <= A;                       // r0 = ACC, updated EVERY clock
+            if (wr_ex) reg_file[1] <= B;
+            if (su)    sp <= A;
+            if (wr && addr != 5'b0) reg_file[addr] <= update_r;
         end
     end
     
-    // Decode logic (combinational)
+ function [15:0] byp; // for wr in half cycle 
+        input [4:0]  idx;
+        input [15:0] raw;
+        input        w;
+        input [4:0]  a;
+        input [15:0] d;
+        byp = (w && a != 5'b0 && a == idx) ? d : raw;
+    endfunction
+ 
+    wire [15:0] rf_s1 = byp(instruction[20:16], reg_file[instruction[20:16]], wr, addr, update_r); //rs1
+    wire [15:0] rf_s2 = byp(instruction[15:11], reg_file[instruction[15:11]], wr, addr, update_r); //rs2
+    wire [15:0] rf_c  = byp(instruction[25:21], reg_file[instruction[25:21]], wr, addr, update_r); //rd
+    wire [15:0] mar_l = byp(5'd30, reg_file[30], wr, addr, update_r); //pc update
+    wire [15:0] mar_h = byp(5'd31, reg_file[31], wr, addr, update_r);
+    
+    // Decode logic 
     always @(*) begin
         // Default assignments
         instruction_decoded = instruction;
@@ -104,86 +124,50 @@ input wire [5:0] rd_ex,      // {we, addr} from EX stage = ard2
         ard_decoded = 5'b0;
         ars1_decoded = 5'b0;
         ars2_decoded = 5'b0;
+        use1_decoded = 1'b0;
+        use2_decoded = 1'b0;
         rs1_decoded = 16'b0;
         rs2_decoded = 16'b0;
         con_decoded = 4'b0;
-        data_out_decoded = 16'b0;
-        
+
+    
         case (instruction[31:30])
-            2'b00: begin  // R-type instructions
-                if (instruction[2:0] == 3'b000) begin  // Normal R-type
-                    ard_decoded = instruction[25:21];    // Destination register
-                    ars1_decoded = instruction[20:16];   // Source register 1
-                    ars2_decoded = instruction[15:11];   // Source register 2
-                    rs1_decoded = reg_file[instruction[20:16]];
-                    rs2_decoded = reg_file[instruction[15:11]];
+            2'b00: begin  // R-type
+                if (instruction[2:0] == 3'b000) begin
+                    ard_decoded  = instruction[25:21];
+                    ars1_decoded = instruction[20:16];
+                    ars2_decoded = instruction[15:11];
+                    use1_decoded = 1'b1;
+                    use2_decoded = 1'b1;
+                    rs1_decoded  = rf_s1;
+                    rs2_decoded  = rf_s2;
+                    con_decoded  = instruction[29:26];
+                end else if (instruction[1:0] == 2'b11 && instruction[29:26] == 4'b0100) begin // return
                     con_decoded = instruction[29:26];
-                end else if (instruction[1:0] == 2'b11 && instruction[29:26] == 4'b0100) begin
-                    // Return instruction
-                    con_decoded = instruction[29:26];
-                    ard_decoded = 5'b0;
-                    ars1_decoded = 5'b0;
-                    ars2_decoded = 5'b0;
                     rs1_decoded = sp;
                     rs2_decoded = 16'h0003;
                 end
             end
             
-            2'b01: begin  // Immediate instructions
-                ard_decoded = instruction[25:21];    // Destination register
-                ars1_decoded = instruction[20:16];   // Source register 1
-                rs1_decoded = reg_file[instruction[20:16]];
-                rs2_decoded = instruction[15:0];     // Immediate value
-                con_decoded = instruction[29:26];
+            2'b01: begin  // immediate
+                ard_decoded  = instruction[25:21];
+                ars1_decoded = instruction[20:16];
+                use1_decoded = 1'b1;
+                rs1_decoded  = rf_s1;
+                rs2_decoded  = instruction[15:0];
+                con_decoded  = instruction[29:26];
             end
             
-            2'b10: begin  // Load/Store instructions
+            2'b10: begin  // load / store  (ard = load dest  OR  store data reg)
+                ard_decoded  = instruction[25:21];
+                ars1_decoded = instruction[20:16];
+                use1_decoded = 1'b1;
+                rs1_decoded  = rf_s1;
+                rs2_decoded  = instruction[15:0];
                 case (instruction[27:26])
-                    2'b00: begin  // Load (add)
-                        ard_decoded = instruction[25:21];
-                        ars1_decoded = instruction[20:16];
-                        rs1_decoded = reg_file[instruction[20:16]];
-                        rs2_decoded = instruction[15:0];
-                        con_decoded = 4'b0100;
-                    end
-                    
-                    2'b01: begin  // Load (subtract)
-                        ard_decoded = instruction[25:21];
-                        ars1_decoded = instruction[20:16];
-                        rs1_decoded = reg_file[instruction[20:16]];
-                        rs2_decoded = instruction[15:0];
-                        con_decoded = 4'b0010;
-                    end
-                    
-                    2'b10: begin  // Store (add)
-                        ard_decoded = instruction[25:21];
-                        ars1_decoded = instruction[20:16];
-                        rs1_decoded = reg_file[instruction[20:16]];
-                        rs2_decoded = instruction[15:0];
-                        con_decoded = 4'b0100;
-                    end
-                    
-                    2'b11: begin  // Store (subtract)
-                        ard_decoded = instruction[25:21];
-                        ars1_decoded = instruction[20:16];
-                        rs1_decoded = reg_file[instruction[20:16]];
-                        rs2_decoded = instruction[15:0];
-                        con_decoded = 4'b0010;
-                    end
+                    2'b00, 2'b10: con_decoded = 4'b0100;   // base + offset
+                    2'b01, 2'b11: con_decoded = 4'b0010;   // base - offset
                 endcase
-                
-                // Data output for store operations
-                if (instruction[27] == 1'b1) begin  // store operation
-    // Priority: EX > MEM > WB > regfile (most recent wins)
-    if (rd_ex[5] && (rd_ex[4:0] == ard_decoded) && (ard_decoded != 5'b0))
-        data_out_decoded = val_ex;
-    else if (rd_mm[5] && (rd_mm[4:0] == ard_decoded) && (ard_decoded != 5'b0))
-        data_out_decoded = val_mm;
-    else if (rd_wb[5] && (rd_wb[4:0] == ard_decoded) && (ard_decoded != 5'b0))
-        data_out_decoded = val_wb;
-    else
-        data_out_decoded = reg_file[ard_decoded];
-end
             end
             
             2'b11: begin  // Branch/Call instructions
@@ -216,13 +200,13 @@ end
                     end
                     
                     3'b110: begin  // Jump if reg1 < reg2
-                        if (reg_file[instruction[25:21]] < reg_file[instruction[20:16]]) begin
+                        if (rf_c <  rf_s1) begin
                             brch_decoded = 1'b0;
                         end
                     end
                     
                     3'b111: begin  // Jump if reg1 == reg2
-                        if (!(reg_file[instruction[25:21]] == reg_file[instruction[20:16]])) begin
+                        if (!(rf_c == rf_s1)) begin
                             brch_decoded = 1'b0;
                         end
                     end
@@ -231,9 +215,6 @@ end
                 // Call instruction (branch with instruction[2:0] == 101)
                 if (brch_decoded == 1'b1 && instruction[2:0] == 3'b101) begin
                     con_decoded = 4'b0010;  // Subtract operation for SP update
-                    ard_decoded = 5'b0;
-                    ars1_decoded = 5'b0;
-                    ars2_decoded = 5'b0;
                     rs1_decoded = sp;
                     rs2_decoded = 16'h0003;  // Subtract 3 from SP
                 end
@@ -242,33 +223,20 @@ end
     end
     
     // Buffer instance
-    ID_Buffer buffer_inst (
-        .clk(clk),
-        .rst(rst),
-        .instruction_in(instruction_decoded),
-        .pc_in(pc_decoded),
-        .brch_in(brch_decoded),
-        .pc_branch_in(pc_branch_decoded),
+        ID_Buffer buffer_inst (
+        .clk(clk), .rst(rst), .stall(stall),
+        .instruction_in(instruction_decoded), .pc_in(pc_decoded),
+        .brch_in(brch_decoded), .pc_branch_in(pc_branch_decoded),
         .sp_add_in(sp_add_decoded),
-        .ard_in(ard_decoded),
-        .ars1_in(ars1_decoded),
-        .ars2_in(ars2_decoded),
-        .rs1_in(rs1_decoded),
-        .rs2_in(rs2_decoded),
-        .con_in(con_decoded),
-        
-        .instruction_out(instruction1),
-        .pc_out(pc1),
-        .brch_out(brch),
-        .pc_branch_out(pc_branch),
+        .ard_in(ard_decoded), .ars1_in(ars1_decoded), .ars2_in(ars2_decoded),
+        .use1_in(use1_decoded), .use2_in(use2_decoded),
+        .rs1_in(rs1_decoded), .rs2_in(rs2_decoded), .con_in(con_decoded),
+        .instruction_out(instruction1), .pc_out(pc1),
+        .brch_out(brch), .pc_branch_out(pc_branch),
         .sp_add_out(sp_add),
-        .ard_out(ard),
-        .ars1_out(ars1),
-        .ars2_out(ars2),
-        .rs1_out(rs1),
-        .rs2_out(rs2),
-        .con_out(con),
-        .stall(stall)
+        .ard_out(ard), .ars1_out(ars1), .ars2_out(ars2),
+        .use1_out(use1), .use2_out(use2),
+        .rs1_out(rs1), .rs2_out(rs2), .con_out(con)
     );
 
 endmodule

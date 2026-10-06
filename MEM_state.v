@@ -13,18 +13,11 @@ always @(posedge clk or posedge rst) begin
         end  else begin
         instructions <= instruction;
             ard_[4:0] <= ard[4:0];
-            ard_[5] <= (instruction[31]&(~instruction[30]))? 1'b1 : ard[5];
+            ard_[5] <= (instruction[31] & ~instruction[30]) ? ~instruction[27] : ard[5];
             ars1_ <= ars1;
-            if (rd | sprd) begin
-            out <= data_out;
-                if(sprd) begin
-                return <= 1'b1;
-                end
-            end else begin
-            out <= A;
-            return <= 1'b0;
-            end
             ars2_ <= ars2;
+            out <= (rd | sprd) ? data_out : A;
+            return <= sprd; 
         end
 end
 endmodule
@@ -36,41 +29,33 @@ module memory #(
     input  wire  clk,rst,wr,rd,spwr,sprd,    
     input  wire [ADDR_WIDTH-1:0] A,      // Address
     input  wire [15:0] data_in, // Data to write
-    output reg  [15:0] data_out, // Data read
+    output wire  [15:0] data_out, // Data read
     input  wire [15:0] sp,
     input wire [31:0] pc,
     input wire [5:0] flags,
     output wire [31:0] pc_out
 );
     reg [15:0] mem [0:SIZE-1];
-
+    assign data_out = sprd ? ((sp < SIZE) ? mem[sp] : 16'b0) :
+                      (rd && (A < SIZE))  ? mem[A]  : 16'b0;   
     integer i;
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             for (i = 0; i < SIZE; i = i + 1) begin
                 mem[i] <= 16'b0;
             end
-            data_out <= 16'b0;
         end else begin
             if (wr && (A < SIZE)) begin
                 mem[A] <= data_in;
             end
-            if (rd && (A < SIZE)) begin
-                data_out <= mem[A];
-            end
-            if (sprd) begin
-                data_out <= mem[sp];
-            end
             if (spwr) begin
-            mem[sp] <= flags;
-            mem[sp - 1'b1] <= pc[15:0];
-            mem[sp - 2'b10] <=  pc[31:16];
-            end else if (!rd & (~sprd)) begin
-                data_out <= 16'b0;
+                mem[sp] <= flags;
+                mem[sp - 1'b1] <= pc[15:0];
+                mem[sp - 2'b10] <=  pc[31:16];
             end
         end
     end
-assign pc_out = {mem[sp + 1'b1],mem[sp + 2'b10]};
+    assign pc_out = {mem[sp + 1'b1],mem[sp + 2'b10]};
 endmodule
 
 

@@ -1,62 +1,48 @@
-module forwarding_unit (
-    input  wire [5:0]  rd_ex,      // {we_ex, rd_ex[4:0]}
-    input  wire [15:0] ex_val, 
-    input  wire [5:0]  rd_mm,     
-    input  wire [15:0] mm_val,
-    input  wire [5:0]  rd_wb,      
-    input  wire [15:0] wb_val,     
+module forwarding_unit #(parameter ACC_FWD = 1) (
+    input  wire [5:0]  rd_ex, input wire [15:0] ex_val,   // EX/MEM
+    input  wire [5:0]  rd_mm, input wire [15:0] mm_val,   // MEM/WB
+    input  wire [5:0]  rd_wb, input wire [15:0] wb_val,   // WB buffer
     input  wire [4:0]  rs1, rs2,
-    input  wire [15:0] rs1_val,   
-    input  wire [15:0] rs2_val,   
-    
-    input  wire  is_load_ex, 
-
-    output reg  [15:0] out1, out2,
-    output reg         stall
+    input  wire        use1, use2,
+    input  wire [15:0] rs1_val, rs2_val,
+    output reg  [15:0] out1, out2
 );
-    reg [1:0] sel1, sel2;
-
     always @(*) begin
-        sel1 = 2'b00;
-        if      (rd_ex[5] && (rd_ex[4:0] != 5'b0) && (rd_ex[4:0] == rs1))
-            sel1 = 2'b01;  
-        else if (rd_mm[5] && (rd_mm[4:0] != 5'b0) && (rd_mm[4:0] == rs1))
-            sel1 = 2'b10; 
-        else if (rd_wb[5] && (rd_wb[4:0] != 5'b0) && (rd_wb[4:0] == rs1))
-            sel1 = 2'b11;
-
-        case (sel1)
-            2'b00: out1 = rs1_val;
-            2'b01: out1 = ex_val;
-            2'b10: out1 = mm_val;
-            2'b11: out1 = wb_val;
-            default: out1 = rs1_val;
-        endcase
+        if      (ACC_FWD != 0 && use1 && rs1 == 5'b0)                          out1 = ex_val;
+        else if (rd_ex[5] && rd_ex[4:0] != 5'b0 && rd_ex[4:0] == rs1)          out1 = ex_val;
+        else if (rd_mm[5] && rd_mm[4:0] != 5'b0 && rd_mm[4:0] == rs1)          out1 = mm_val;
+        else if (rd_wb[5] && rd_wb[4:0] != 5'b0 && rd_wb[4:0] == rs1)          out1 = wb_val;
+        else                                                                    out1 = rs1_val;
     end
-
     always @(*) begin
-        sel2 = 2'b00;
-        if      (rd_ex[5] && (rd_ex[4:0] != 5'b0) && (rd_ex[4:0] == rs2))
-            sel2 = 2'b01;
-        else if (rd_mm[5] && (rd_mm[4:0] != 5'b0) && (rd_mm[4:0] == rs2))
-            sel2 = 2'b10;
-        else if (rd_wb[5] && (rd_wb[4:0] != 5'b0) && (rd_wb[4:0] == rs2))
-            sel2 = 2'b11;
-
-        case (sel2)
-            2'b00: out2 = rs2_val;
-            2'b01: out2 = ex_val;
-            2'b10: out2 = mm_val;
-            2'b11: out2 = wb_val;
-            default: out2 = rs2_val;
-        endcase
+        if      (ACC_FWD != 0 && use2 && rs2 == 5'b0)                          out2 = ex_val;
+        else if (rd_ex[5] && rd_ex[4:0] != 5'b0 && rd_ex[4:0] == rs2)          out2 = ex_val;
+        else if (rd_mm[5] && rd_mm[4:0] != 5'b0 && rd_mm[4:0] == rs2)          out2 = mm_val;
+        else if (rd_wb[5] && rd_wb[4:0] != 5'b0 && rd_wb[4:0] == rs2)          out2 = wb_val;
+        else                                                                    out2 = rs2_val;
     end
+endmodule
 
- always @(*) begin
-        stall = 1'b0;
-        if (is_load_ex && (rd_ex[4:0] != 5'b0) &&
-            ((rd_ex[4:0] == rs1) || (rd_ex[4:0] == rs2)))
-            stall = 1'b1;
-    end
+module load_use_hazard (
+    input  wire       is_load_ex,
+    input  wire [4:0] ld_rd,            // ID/EX dest (the load's rd)
+    input  wire [4:0] id_rs1, id_rs2,   // sources of instruction in ID
+    output wire       stall
+);
+    assign stall = is_load_ex && (ld_rd != 5'b0) &&
+                   (ld_rd == id_rs1 || ld_rd == id_rs2);
+endmodule
 
+module store_data_fwd (
+    input  wire [4:0]  st_reg,                          // store data reg (EX/MEM ard[4:0])
+    input  wire [15:0] rf_val,                          // raw regfile read
+    input  wire [5:0]  rd_mm, input wire [15:0] mm_val, // MEM/WB (incl. load data)
+    input  wire [5:0]  rd_wb, input wire [15:0] wb_val, // WB buffer
+    output wire [15:0] st_data
+);
+    assign st_data =
+        (st_reg == 5'b0)                                   ? rf_val :
+        (rd_mm[5] && rd_mm[4:0] == st_reg)                 ? mm_val :
+        (rd_wb[5] && rd_wb[4:0] == st_reg)                 ? wb_val :
+                                                             rf_val;
 endmodule
