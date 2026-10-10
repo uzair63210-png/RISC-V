@@ -33,7 +33,14 @@ module memory #(
 );
     reg [15:0] mem [0:SIZE-1];
     assign data_out = sprd ? ((sp < SIZE) ? mem[sp] : 16'b0) :
-                      (rd && (A < SIZE))  ? mem[A]  : 16'b0;   
+                      (rd && (A < SIZE))  ? mem[A]  : 16'b0;  
+                      
+    reg [5:0] flags_q;
+    always @(posedge clk or posedge rst) begin
+        if (rst) flags_q <= 6'b0;
+        else     flags_q <= flags;
+    end                   
+    
     integer i;
     always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -45,7 +52,7 @@ module memory #(
                 mem[A] <= data_in;
             end
             if (spwr) begin
-                mem[sp] <= flags;
+                mem[sp] <= flags_q;
                 mem[sp - 1'b1] <= pc[15:0];
                 mem[sp - 2'b10] <=  pc[31:16];
             end

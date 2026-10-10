@@ -199,7 +199,7 @@ output wire [15:0] st_rdata
                     end
                     
                     4'b0110: begin  // Jump if reg1 > reg2
-                        if (rf_c < rf_s1) begin
+                        if (rf_c <= rf_s1) begin
                             brch_decoded = 1'b0;
                         end
                     end
@@ -210,17 +210,17 @@ output wire [15:0] st_rdata
                         end
                     end
                     4'b1000: begin  // Jump if reg1 < reg2
-                        if (rf_c > rf_s1) begin
+                        if (rf_c >= rf_s1) begin
                             brch_decoded = 1'b0;
                         end
                     end 
                     4'b1001: begin  // Jump if reg1 < imm
-                        if (rf_c > instruction[18:3]) begin
+                        if (rf_c >= instruction[18:3]) begin
                             brch_decoded = 1'b0;
                         end
                     end 
                     4'b1010: begin  // Jump if reg1 > imm
-                        if (rf_c < instruction[18:3]) begin
+                        if (rf_c <= instruction[18:3]) begin
                             brch_decoded = 1'b0;
                         end
                     end 
@@ -230,12 +230,12 @@ output wire [15:0] st_rdata
                         end
                     end 
                     4'b1100: begin  // Jump if acc < imm
-                        if (reg_file [0] > instruction[18:3]) begin
+                        if (reg_file [0] >= instruction[18:3]) begin
                             brch_decoded = 1'b0;
                         end
                     end 
                     4'b1101: begin  // Jump if acc > imm
-                        if (reg_file [0] < instruction[18:3]) begin
+                        if (reg_file [0] <= instruction[18:3]) begin
                             brch_decoded = 1'b0;
                         end
                     end 
@@ -245,7 +245,7 @@ output wire [15:0] st_rdata
                         end
                     end
                     4'b1111: begin  // Jump if acc > imm and acc > 0;
-                        if ((!(reg_file [0] > instruction[18:3]) && flags[4])) begin
+                        if ((!(reg_file [0] >= instruction[18:3]) && flags[4])) begin
                             brch_decoded = 1'b0;
                         end
                     end
