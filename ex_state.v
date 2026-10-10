@@ -1,8 +1,8 @@
-module ex_Buffer(input [31:0] instruction, output reg [31:0] instructions,input clk,rst,
+module ex_Buffer(input [31:0] instruction, output reg [31:0] instructions,input clk,rst,wr1,
 input [15:0]sp_add,input [4:0] ard,ars1,ars2,input [15:0] rs1,rs2,B,A,
 input [5:0]  flag,output reg [5:0] flags,input wire [31:0] pc,output reg [31:0] pc1,
 output reg [5:0] ard_,output reg [4:0] ars1_,ars2_,
-output reg [15:0] rs1_,B_,A_,output reg [15:0]sp_add_,output reg su);
+output reg [15:0] rs1_,B_,A_,output reg [15:0]sp_add_,output reg su,wr);
 
 always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -17,6 +17,7 @@ always @(posedge clk or posedge rst) begin
             sp_add_ <= 16'b0;
             pc1 <= 16'b0;
             su <= 1'b0;
+            wr <= 1'b0;
         end  else begin
             if (&{~instruction[31],~instruction[30],~instruction[29],instruction[28],~instruction[27],~instruction[26],instruction[1],instruction[0]} | 
             &{instruction[31],instruction[30],instruction[0],~instruction[1],instruction[2]}) begin
@@ -35,6 +36,7 @@ always @(posedge clk or posedge rst) begin
             rs1_ <= rs1;
             sp_add_ <= sp_add;
             pc1 <= pc;
+            wr <= wr1;
         end
 end
 endmodule
@@ -48,11 +50,12 @@ output [5:0] ard_,output [4:0] ars1_,ars2_,output [15:0] rs1_,B_,A_,output [15:0
 input [3:0] con,output su,wr,input f0, output is_load_ex);
 wire [15:0] A1,B1;
 wire [5:0]f; 
+wire w1;
 
-ALU alu (rs1,rs2,con,instruction[10:9],A1,B1,f,flag,wr,f0);
+ALU alu (rs1,rs2,con,instruction[10:9],A1,B1,f,flag,wr1,f0);
 
-ex_Buffer buff(instruction,instructions,clk,rst,sp_add,ard,ars1,ars2,rs1,rs2,B1,A1,
-f,flags,pc,pc1,ard_,ars1_,ars2_,rs1_,B_,A_,sp_add_,su);
+ex_Buffer buff(instruction,instructions,clk,rst,wr1,sp_add,ard,ars1,ars2,rs1,rs2,B1,A1,
+f,flags,pc,pc1,ard_,ars1_,ars2_,rs1_,B_,A_,sp_add_,su,wr);
 
 assign is_load_ex = instruction[31] & ~instruction[30] & ~instruction[27];
 endmodule
