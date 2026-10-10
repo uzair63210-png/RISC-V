@@ -65,7 +65,7 @@ wire wr,rd,sprd,spwr;
 wire [15:0] d1;
 assign wr = &{instruction[31],~instruction[30],instruction[27]};
 assign rd = &{instruction[31],~instruction[30],~instruction[27]};
-assign spwr = &{instruction[31],instruction[30],instruction[0]};
+assign spwr = &{instruction[31],instruction[30],instruction[0],~instruction[1],instruction[2]};
 assign sprd = &{~instruction[31],~instruction[30],~instruction[29],instruction[28],~instruction[27],~instruction[26],instruction[1],instruction[0]};
 
 memory mem (clk,rst,wr,rd,spwr,sprd,A,data_in,d1,sp,pc,flags,pc_out);
