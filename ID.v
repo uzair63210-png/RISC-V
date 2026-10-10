@@ -23,7 +23,7 @@ output reg [3:0] con_out
             brch_out <= 1'b0;          pc_branch_out <= 32'b0;
             sp_add_out <= 16'h001A;
             ard_out <= 5'b0;  ars1_out <= 5'b0;  ars2_out <= 5'b0;
-            use1_out <= 1'b0; use2_out <= 1'b0;
+            use1_out <= stall & ~rst  ; use2_out <= 1'b0;
             rs1_out <= 16'b0; rs2_out <= 16'b0;
             con_out <= (stall) ? 4'b1111: 4'b0;
         end else if (!stall )begin
@@ -83,7 +83,6 @@ output wire [15:0] st_rdata
     assign ars1_id = ars1_decoded;
     assign ars2_id = ars2_decoded;
     assign st_rdata = reg_file[st_addr]; 
-    assign sp_add = sp_add_decoded;
    
     integer i;
     always @(posedge clk or posedge rst) begin
@@ -174,39 +173,79 @@ output wire [15:0] st_rdata
                 brch_decoded = 1'b1;
                 pc_branch_decoded = {reg_file[31], reg_file[30]};  // PC = {MARh, MARl}
                 
-                case (instruction[28:26])
-                    3'b000: begin  // Unconditional jump
+                case (instruction[29:26])
+                    4'b0000: begin  // Unconditional jump
                         brch_decoded = 1'b1;
                     end
                     
-                    3'b001: begin  // Jump on carry
+                    4'b0001: begin  // Jump on carry
                         if (~flags[1]) brch_decoded = 1'b0;
                     end
                     
-                    3'b010: begin  // Jump on negative
+                    4'b0010: begin  // Jump on negative
                         if (~flags[4]) brch_decoded = 1'b0;
                     end
                     
-                    3'b011: begin  // Jump on positive
+                    4'b0011: begin  // Jump on positive
                         if (flags[4]) brch_decoded = 1'b0;
                     end
                     
-                    3'b100: begin  // Jump on even
+                    4'b0100: begin  // Jump on even
                         if (flags[0]) brch_decoded = 1'b0;
                     end
                     
-                    3'b101: begin  // Jump on odd
+                    4'b0101: begin  // Jump on odd
                         if (~flags[0]) brch_decoded = 1'b0;
                     end
                     
-                    3'b110: begin  // Jump if reg1 < reg2
+                    4'b0110: begin  // Jump if reg1 > reg2
                         if (rf_c <  rf_s1) begin
                             brch_decoded = 1'b0;
                         end
                     end
                     
-                    3'b111: begin  // Jump if reg1 == reg2
+                    4'b0111: begin  // Jump if reg1 == reg2
                         if (!(rf_c == rf_s1)) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end
+                    4'b1000: begin  // Jump if reg1 < reg2
+                        if (rf_c > rf_s1) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end 
+                    4'b1001: begin  // Jump if reg1 < imm
+                        if (rf_c > instruction[18:3]) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end 
+                    4'b1010: begin  // Jump if reg1 > imm
+                        if (rf_c < instruction[18:3]) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end 
+                    4'b1011: begin  // Jump if reg1 == imm
+                        if (!(rf_c == instruction[18:3])) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end 
+                    4'b1100: begin  // Jump if acc < imm
+                        if (reg_file [0] > instruction[18:3]) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end 
+                    4'b1101: begin  // Jump if acc > imm
+                        if (reg_file [0] < instruction[18:3]) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end 
+                    4'b1110: begin  // Jump if acc == imm
+                        if (!(reg_file [0] == instruction[18:3])) begin
+                            brch_decoded = 1'b0;
+                        end
+                    end
+                    4'b1111: begin  // Jump if acc > imm and acc > 0;
+                        if ((!(reg_file [0] > instruction[18:3]) && flags[4])) begin
                             brch_decoded = 1'b0;
                         end
                     end

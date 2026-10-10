@@ -19,10 +19,13 @@ module ALU (
     always @(*) begin
     
     wr = 1'b0;
+    b_out = 16'b0;     
+    alu_out = A;       
+    flags = fg_i; 
             case (con)
                 4'b0000: begin //move
                     alu_out = A;
-                    flags = {1'b0, 1'b0, ~|A, 1'b0, 1'b0, ^alu_out};
+                    flags = {1'b0, 1'b0, ~|alu_out, 1'b0, 1'b0, ^alu_out};
                 end
                 //overflow sign zero AC carry parity
                 4'b0001: begin //xor
@@ -61,18 +64,18 @@ module ALU (
                 end
                 
                 4'b1000: begin //rotate left
-                    {alu_out, flags[1]} = {A, fg_i[1]} << 1;
-                    flags = {1'b0, 1'b0, ~|alu_out, 1'b0, flags[1], ^alu_out};
+                     alu_out = {A[14:0], fg_i[1]};
+                    flags = {1'b0, 1'b0, ~|alu_out, 1'b0, A[15], ^alu_out};
                 end
                 
                 4'b1001: begin //rotate right
-                    {flags[1], alu_out} = {fg_i[1], A} >> 1;
-                    flags = {1'b0, 1'b0, ~|alu_out, 1'b0, flags[1], ^alu_out};
+                    alu_out = {fg_i[1], A[15:1]};
+                    flags = {1'b0, 1'b0, ~|alu_out, 1'b0, A[0], ^alu_out};
                 end
                 
                 4'b1010: begin // campare
                     alu_out = A;
-                    if (A == B)      flags = {3'b0, 1'b1, 2'b0};
+                    if (A == B)      flags = {2'b0, 1'b1, 3'b0};
                     else if (A > B)  flags = 6'b0;
                     else             flags = {4'b0, 1'b1, 1'b0};
                 end
@@ -98,21 +101,18 @@ module ALU (
                     wr = 1'b1;
                 end
                 
-                4'b1111: begin //flage operation
-                  alu_out = A;
-                  flags = fg_i; // default hold old flags
-                  if (sel == 2'b01) flags = {fg_i[5:2], 1'b1, fg_i[0]}; // set carry
-                  else if (sel == 2'b10) flags = {fg_i[5:2], ~fg_i[1], fg_i[0]};
-                  else if (f0) flags = fg_i; // restore
-
+                 4'b1111: begin //flage operation
+                 alu_out = A;
+                 flags = fg_i; // default hold old flags
+                 if (sel == 2'b01) flags = {fg_i[5:2], 1'b1, fg_i[0]}; // set carry
+                 else if (sel == 2'b10) flags = {fg_i[5:2], ~fg_i[1], fg_i[0]};
                 end
                 
                 default: begin
-                    alu_out = alu_out;
-                    flags = 6'b0;
+                    alu_out = A;
+                    flags = fg_i;
                 end
             endcase
+             if (f0) flags = fg_i; // restore for return
         end
-
-
 endmodule

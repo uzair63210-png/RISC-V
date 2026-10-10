@@ -23,7 +23,7 @@ wire [15:0] st_rdata;
 assign pc_brch = (return) ? pc_out : pc_brch1;
 assign flag_in = (return) ? out[5:0] : flags;
 
-IF_stage IF (pc_brch,brch|return,rst,clk,pc,instruction, stall, 1'b0);
+IF_stage IF (pc_brch,brch|return,rst,clk,pc,instruction, stall);
 
 ID ID (instruction,pc,clk,rst,brch,pc_brch1,instruction1,sp_add,pc1,ard1,ars11,
 ars21,use11,use21,rs11,rs21,flags,wr,addr[4:0],update_r,A,B,con,wr_ex,su,stall,id_rs1,id_rs2,
@@ -43,8 +43,8 @@ ex_state EX (instruction1,instructions,clk,rst,sp_add,ard1,ars11,ars21,out1,out2
 flag_in,flags,pc1,pc2,ard2,ars12,ars22,rs12,B,A,sp_add_,con,su,wr_ex,return,is_load_ex);
 
 MEM_state MEM (instructions,pc_out,clk,rst,A,sp_add_,data_out,pc2,flags,instructions2,
-ard2,ars12,ars22,ard3,ars13,ars23,out,return);
+ard2,ars12,ars22,ard3,out,return);
 
-WB_state WB (instructions2,clk,rst,ard3,ars13,ars23,addr,out,wr,update_r);
+WB_state WB (instructions2,clk,rst,ard3,addr,out,wr,update_r);
 
 endmodule
