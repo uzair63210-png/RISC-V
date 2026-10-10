@@ -199,7 +199,7 @@ output wire [15:0] st_rdata
                     end
                     
                     4'b0110: begin  // Jump if reg1 > reg2
-                        if (rf_c <  rf_s1) begin
+                        if (rf_c < rf_s1) begin
                             brch_decoded = 1'b0;
                         end
                     end

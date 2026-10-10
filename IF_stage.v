@@ -3,7 +3,7 @@ module IF_Buffer #(parameter [31:0] NOP = 32'h3C000000) (
     input  wire [31:0] instruction_in, pc_in,
     output reg  [31:0] instruction_out, pc_out
 );
-    always @(posedge clk) begin
+    always @(posedge clk or posedge rst) begin
         if (rst) begin
             pc_out          <= 32'b0;
             instruction_out <= 32'b0;
