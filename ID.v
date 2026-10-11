@@ -1,4 +1,4 @@
-module ID_Buffer (input wire clk, rst, stall,
+(reg_file[0] <= instruction[18:3]) || reg_file[0][15]module ID_Buffer (input wire clk, rst, stall,
 input wire [31:0] instruction_in, pc_in,
 input wire brch_in,
 input wire [31:0] pc_branch_in,
@@ -245,7 +245,7 @@ output wire [15:0] st_rdata
                         end
                     end
                     4'b1111: begin  // Jump if acc > imm and acc > 0;
-                        if ((!(reg_file [0] >= instruction[18:3]) && flags[4])) begin
+                        if ((reg_file[0] <= instruction[18:3]) || reg_file[0][15]) begin //(!(reg_file [0] >= instruction[18:3]) && flags[4])
                             brch_decoded = 1'b0;
                         end
                     end
