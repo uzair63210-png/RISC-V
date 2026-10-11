@@ -32,7 +32,6 @@ module memory #(
     output wire [31:0] pc_out
 );
     reg [15:0] mem [0:SIZE-1];
-    wire [15:0] sp_flags = sp + 16'd3;
     assign data_out = sprd ? ((sp < SIZE) ? mem[sp] : 16'b0) :
                       (rd && (A < SIZE))  ? mem[A]  : 16'b0;  
                       
@@ -53,9 +52,9 @@ module memory #(
                 mem[A] <= data_in;
             end
             if (spwr) begin
-                mem[sp] <= flags_q;
-                mem[sp - 1'b1] <= pc[15:0];
-                mem[sp - 2'b10] <=  pc[31:16];
+                mem[sp - 16'd3] <= flags_q;      // was: mem[sp]
+                mem[sp - 16'd1] <= pc[15:0];
+                mem[sp - 16'd2] <= pc[31:16];
             end
         end
     end
