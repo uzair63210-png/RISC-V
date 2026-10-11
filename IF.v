@@ -13,7 +13,8 @@ if(rst) begin
 end
 else  begin 
  pc <= next_pc;
-if (!stall) instruction <= instruction_memory[pc];
+ if (brch) instruction <= 32'h3C000000;
+else if (!stall) instruction <= instruction_memory[pc];
 end 
 end
 endmodule
