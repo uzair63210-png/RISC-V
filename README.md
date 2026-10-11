@@ -1,5 +1,5 @@
-# RISC-V
-try to built the 5 stage pipeline processor and improve it as I gain knowledge
+# RISC_U-V
+try to built the 5 stage pipeline processor and improve it as I gain knowledge. RISC_U-V is custom ISA based 5 stage base CPU
 
 # version 1 uploaded on 21/8/2026 
 <br> simple form of cpu
@@ -16,7 +16,7 @@ try to built the 5 stage pipeline processor and improve it as I gain knowledge
 # version 2.1 uploaded on 6/10/2026 
 add forwarding unit for mm state
 
-# RISC-V 5-Stage Pipelined CPU
+# RISC_U-V 5-Stage Pipelined CPU
 
 A 16-bit datapath, 5-stage pipeline processor (IF → ID → EX → MEM → WB)
 written in Verilog. Custom ISA: RISC-V-style encoding family, but with a
